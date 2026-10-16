@@ -7,7 +7,12 @@
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{url}
+\usepackage{xpatch}
 \graphicspath{{../diagrams/}}
+\makeatletter
+\xpatchcmd{\abstract}{---}{.\ }{}{}
+\xpatchcmd{\IEEEkeywords}{---}{.\ }{}{}
+\makeatother
 
 \begin{document}
 
