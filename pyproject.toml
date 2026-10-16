@@ -9,13 +9,19 @@ description = "Agent Reliability Lab: evaluation, failure analysis, and optimiza
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "Agent Reliability Lab contributors" }]
+authors = [
+    { name = "Suryansh Singh" },
+    { name = "Simran Kumari" },
+    { name = "Tanishka Sahu" },
+]
 keywords = [
     "agents",
     "evaluation",
     "reliability",
     "llm",
     "failure-analysis",
+    "fault-injection",
+    "benchmark",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -25,10 +31,12 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
     "pydantic>=2.7",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -41,14 +49,14 @@ dev = [
 relai = "relai.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/relai-lab/relai"
-Issues = "https://github.com/relai-lab/relai/issues"
+Homepage = "https://github.com/devSuryansh/relAI"
+Issues = "https://github.com/devSuryansh/relAI/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-relai = ["py.typed"]
+relai = ["py.typed", "suites/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

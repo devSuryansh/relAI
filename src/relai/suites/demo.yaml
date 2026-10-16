@@ -1,0 +1,46 @@
+name: demo
+description: >-
+  Three small tasks for a first look: direct arithmetic, one lookup, and a
+  weather call whose first attempt always times out, so only an agent that
+  retries can finish it.
+scorer: exact
+tools:
+  search:
+    description: Search a small fact table.
+    arg: q
+    cost_usd: 0.002
+    latency_ms: 120
+    responses:
+      capital of France: Paris
+  weather:
+    description: Current weather for a city.
+    arg: city
+    cost_usd: 0.002
+    latency_ms: 300
+    responses:
+      X: sunny
+faults:
+  fail_first_n: 1
+  tools: [weather]
+tasks:
+  - id: short_horizon_qa
+    prompt: What is 6 * 7?
+    expected: "42"
+    tags: [short-horizon]
+    answer: "42"
+  - id: tool_lookup
+    prompt: Look up the capital of France.
+    expected: Paris
+    allowed_tools: [search]
+    tags: [requires_tools]
+    guess: Lyon
+    solution:
+      - {tool: search, args: {q: capital of France}}
+  - id: recover_from_timeout
+    prompt: Fetch the weather, retrying if the tool fails.
+    expected: sunny
+    allowed_tools: [weather]
+    tags: [requires_tools, recovery]
+    guess: unknown
+    solution:
+      - {tool: weather, args: {city: X}}

@@ -1,0 +1,195 @@
+name: reliability
+description: >-
+  A customer-support desk backed by lookup tools. Tasks range from one tool
+  call to five-call chains, so the effect of tool failures, retries, and step
+  budgets grows with task length. No faults are injected by default; pass
+  --timeout-rate or --error-rate to stress it.
+scorer: normalized
+tools:
+  customer_lookup:
+    description: Find a customer id by email address.
+    arg: email
+    cost_usd: 0.001
+    latency_ms: 120
+    responses:
+      asha@example.com: C-1042
+      ravi@example.com: C-2077
+      meera@example.com: C-3110
+  order_history:
+    description: Latest order id for a customer id.
+    arg: customer
+    cost_usd: 0.001
+    latency_ms: 150
+    responses:
+      C-1042: O-88121
+      C-2077: O-88305
+      C-3110: O-88412
+  order_status:
+    description: Status of an order.
+    arg: order
+    cost_usd: 0.001
+    latency_ms: 100
+    responses:
+      O-88121: shipped
+      O-88305: delivered
+      O-88412: cancelled
+  shipping_eta:
+    description: Expected delivery time for an order.
+    arg: order
+    cost_usd: 0.001
+    latency_ms: 140
+    responses:
+      O-88121: 2 days
+      O-88305: already delivered
+  refund_amount:
+    description: Refunded amount in USD for an order.
+    arg: order
+    cost_usd: 0.001
+    latency_ms: 160
+    responses:
+      O-88412: "40"
+  inventory:
+    description: Units in stock for a product SKU.
+    arg: sku
+    cost_usd: 0.001
+    latency_ms: 90
+    responses:
+      SKU-7: "14"
+      SKU-9: "0"
+  exchange_rate:
+    description: Exchange rate for a currency pair such as USD-INR.
+    arg: pair
+    cost_usd: 0.002
+    latency_ms: 200
+    responses:
+      USD-INR: "83.2"
+      EUR-INR: "90.1"
+  weather:
+    description: Current weather for a city.
+    arg: city
+    cost_usd: 0.002
+    latency_ms: 300
+    responses:
+      Noida: sunny
+      Delhi: hazy
+  calculator:
+    kind: calculator
+    cost_usd: 0.0
+    latency_ms: 5
+tasks:
+  - id: order_status
+    prompt: What is the status of order O-88121?
+    expected: shipped
+    allowed_tools: [order_status]
+    tags: [requires_tools, short-horizon]
+    guess: processing
+    solution:
+      - {tool: order_status, args: {order: O-88121}}
+  - id: customer_id
+    prompt: What is the customer id for asha@example.com?
+    expected: C-1042
+    allowed_tools: [customer_lookup]
+    tags: [requires_tools, short-horizon]
+    guess: C-1000
+    solution:
+      - {tool: customer_lookup, args: {email: asha@example.com}}
+  - id: stock_check
+    prompt: How many units of SKU-7 are in stock?
+    expected: "14"
+    allowed_tools: [inventory]
+    tags: [requires_tools, short-horizon]
+    guess: "10"
+    solution:
+      - {tool: inventory, args: {sku: SKU-7}}
+  - id: weather_noida
+    prompt: What is the weather in Noida right now?
+    expected: sunny
+    allowed_tools: [weather]
+    tags: [requires_tools, recovery]
+    guess: hazy
+    solution:
+      - {tool: weather, args: {city: Noida}}
+  - id: mental_math
+    prompt: What is 17 + 25?
+    expected: "42"
+    tags: [short-horizon]
+    answer: "42"
+  - id: usd_to_inr
+    prompt: A gadget costs 120 USD. How much is that in INR at today's rate?
+    expected: "9984"
+    allowed_tools: [exchange_rate, calculator]
+    tags: [requires_tools]
+    max_steps: 10
+    guess: "10000"
+    solution:
+      - {tool: exchange_rate, args: {pair: USD-INR}}
+      - {tool: calculator, args: {expression: "120 * {0}"}}
+  - id: eur_to_inr
+    prompt: Convert 50 EUR to INR at today's rate.
+    expected: "4505"
+    allowed_tools: [exchange_rate, calculator]
+    tags: [requires_tools]
+    max_steps: 10
+    guess: "4500"
+    solution:
+      - {tool: exchange_rate, args: {pair: EUR-INR}}
+      - {tool: calculator, args: {expression: "50 * {0}"}}
+  - id: total_stock
+    prompt: How many units of SKU-7 and SKU-9 are in stock together?
+    expected: "14"
+    allowed_tools: [inventory, calculator]
+    tags: [requires_tools]
+    max_steps: 12
+    guess: "20"
+    solution:
+      - {tool: inventory, args: {sku: SKU-7}}
+      - {tool: inventory, args: {sku: SKU-9}}
+      - {tool: calculator, args: {expression: "{0} + {1}"}}
+  - id: latest_order_status
+    prompt: What is the status of the latest order placed by ravi@example.com?
+    expected: delivered
+    allowed_tools: [customer_lookup, order_history, order_status]
+    tags: [requires_tools, long-horizon]
+    max_steps: 12
+    guess: shipped
+    solution:
+      - {tool: customer_lookup, args: {email: ravi@example.com}}
+      - {tool: order_history, args: {customer: "{0}"}}
+      - {tool: order_status, args: {order: "{1}"}}
+  - id: delivery_eta
+    prompt: When will the latest order placed by asha@example.com arrive?
+    expected: 2 days
+    allowed_tools: [customer_lookup, order_history, shipping_eta]
+    tags: [requires_tools, long-horizon]
+    max_steps: 12
+    guess: 5 days
+    solution:
+      - {tool: customer_lookup, args: {email: asha@example.com}}
+      - {tool: order_history, args: {customer: "{0}"}}
+      - {tool: shipping_eta, args: {order: "{1}"}}
+  - id: cancelled_order
+    prompt: What is the status of the latest order placed by meera@example.com?
+    expected: cancelled
+    allowed_tools: [customer_lookup, order_history, order_status]
+    tags: [requires_tools, long-horizon]
+    max_steps: 12
+    guess: delivered
+    solution:
+      - {tool: customer_lookup, args: {email: meera@example.com}}
+      - {tool: order_history, args: {customer: "{0}"}}
+      - {tool: order_status, args: {order: "{1}"}}
+  - id: refund_in_inr
+    prompt: >-
+      The latest order placed by meera@example.com was refunded in USD. How
+      much is the refund in INR at today's rate?
+    expected: "3328"
+    allowed_tools: [customer_lookup, order_history, refund_amount, exchange_rate, calculator]
+    tags: [requires_tools, long-horizon]
+    max_steps: 16
+    guess: "3000"
+    solution:
+      - {tool: customer_lookup, args: {email: meera@example.com}}
+      - {tool: order_history, args: {customer: "{0}"}}
+      - {tool: refund_amount, args: {order: "{1}"}}
+      - {tool: exchange_rate, args: {pair: USD-INR}}
+      - {tool: calculator, args: {expression: "{2} * {3}"}}
