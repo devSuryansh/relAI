@@ -22,6 +22,7 @@ class FailureMode(StrEnum):
     TOOL_MISUSE = "tool_misuse"
     CONTEXT = "context"
     RECOVERY = "recovery"
+    HORIZON = "horizon"
 
 
 class TokenUsage(BaseModel):
@@ -119,6 +120,7 @@ class Task(BaseModel):
     expected: str | None = None
     allowed_tools: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
+    max_steps: int | None = Field(default=None, ge=1)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -159,6 +161,7 @@ class FailureReport(BaseModel):
 class RunResult(BaseModel):
     task_id: str
     variant: str
+    trial: int = 0
     trajectory: Trajectory
     score: Score
     metrics: RunMetrics

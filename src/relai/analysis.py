@@ -13,7 +13,7 @@ from relai.types import (
 
 
 def analyze(task: Task, trajectory: Trajectory, score: Score) -> FailureReport:
-    """Classify planning, tool, context, and recovery failures on one run."""
+    """Classify planning, tool, context, recovery, and horizon failures on one run."""
     evidence: list[str] = []
     modes: list[FailureMode] = []
     first_at: dict[FailureMode, int] = {}
@@ -38,6 +38,11 @@ def analyze(task: Task, trajectory: Trajectory, score: Score) -> FailureReport:
         modes.append(FailureMode.RECOVERY)
         first_at[FailureMode.RECOVERY] = recovery_idx
 
+    horizon_idx = _horizon_failure(task, trajectory, evidence)
+    if horizon_idx is not None:
+        modes.append(FailureMode.HORIZON)
+        first_at[FailureMode.HORIZON] = horizon_idx
+
     unclassified = not score.success and not modes
     if unclassified:
         evidence.append("failure did not match a known mode")
@@ -61,7 +66,7 @@ def _planning_failure(
     score: Score,
     evidence: list[str],
 ) -> int | None:
-    if score.success:
+    if score.success or trajectory.final_output is None:
         return None
     tool_errors = [
         step
@@ -133,30 +138,12 @@ def _recovery_failure(
     score: Score,
     evidence: list[str],
 ) -> tuple[int | None, float]:
-    errors = [idx for idx, step in enumerate(trajectory.steps) if step.kind == StepKind.ERROR]
-    if not errors:
+    episodes = error_episodes(trajectory, score)
+    if not episodes:
         return None, 1.0
 
-    attempts = len(errors)
-    successes = 0
-    failed_idx: int | None = None
-    for start in errors:
-        recovered = False
-        for step in trajectory.steps[start + 1 :]:
-            if step.kind == StepKind.ERROR:
-                break
-            if step.kind == StepKind.TOOL_CALL and step.tool_ok:
-                recovered = True
-                break
-            if step.kind == StepKind.FINAL:
-                recovered = score.success
-                break
-        if recovered:
-            successes += 1
-        elif failed_idx is None:
-            failed_idx = start
-
-    effectiveness = successes / attempts if attempts else 1.0
+    effectiveness = sum(1 for _, recovered in episodes if recovered) / len(episodes)
+    failed_idx = next((idx for idx, recovered in episodes if not recovered), None)
     if failed_idx is None:
         return None, effectiveness
 
@@ -168,6 +155,52 @@ def _recovery_failure(
     else:
         evidence.append("recovery attempt did not restore a successful path")
     return failed_idx, effectiveness
+
+
+def error_episodes(trajectory: Trajectory, score: Score) -> list[tuple[int, bool]]:
+    """Each error step's index and whether the run later restored a working path.
+
+    A path is restored by a later successful call of the tool that failed, or of
+    any tool when the error follows no tool call, or by a correct final answer.
+    Failed retries in between do not break the episode, so a chain of retries
+    that ends in success counts every one of its errors as recovered.
+    """
+    steps = trajectory.steps
+    episodes: list[tuple[int, bool]] = []
+    for idx, step in enumerate(steps):
+        if step.kind != StepKind.ERROR:
+            continue
+        previous = steps[idx - 1] if idx else None
+        failed_tool = (
+            previous.tool_name
+            if previous is not None and previous.kind == StepKind.TOOL_CALL
+            else None
+        )
+        recovered = False
+        for later in steps[idx + 1 :]:
+            if (
+                later.kind == StepKind.TOOL_CALL
+                and later.tool_ok
+                and (failed_tool is None or later.tool_name == failed_tool)
+            ):
+                recovered = True
+                break
+            if later.kind == StepKind.FINAL:
+                recovered = score.success
+                break
+        episodes.append((idx, recovered))
+    return episodes
+
+
+def _horizon_failure(task: Task, trajectory: Trajectory, evidence: list[str]) -> int | None:
+    steps = len(trajectory.steps)
+    if task.max_steps is not None and steps > task.max_steps:
+        evidence.append(f"took {steps} steps, over the budget of {task.max_steps}")
+        return task.max_steps
+    if trajectory.final_output is None:
+        evidence.append("run ended without a final answer")
+        return max(steps - 1, 0)
+    return None
 
 
 def _index_of(trajectory: Trajectory, kind: StepKind) -> int | None:

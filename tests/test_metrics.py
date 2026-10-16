@@ -1,4 +1,14 @@
-from relai.metrics import compute_metrics, contains_match, exact_match
+import pytest
+
+from relai.metrics import (
+    compute_metrics,
+    contains_match,
+    exact_match,
+    get_scorer,
+    normalized_match,
+    numeric_match,
+    regex_match,
+)
 from relai.types import Score, Step, Task, TokenUsage, Trajectory
 
 
@@ -21,6 +31,36 @@ def test_contains_match() -> None:
     task = Task(id="t", prompt="q", expected="Paris")
     traj = Trajectory(steps=[Step.final("The capital is Paris.")])
     assert contains_match(task, traj).success
+
+
+def test_normalized_match_ignores_case_punctuation_and_spacing() -> None:
+    task = Task(id="t", prompt="q", expected="Gustave Eiffel")
+    assert normalized_match(task, Trajectory(steps=[Step.final("  gustave   eiffel. ")])).success
+    assert not normalized_match(task, Trajectory(steps=[Step.final("Eiffel")])).success
+
+
+def test_numeric_match_gives_partial_credit_outside_tolerance() -> None:
+    task = Task(id="t", prompt="q", expected="9984")
+    scorer = numeric_match(tolerance=0.5)
+    assert scorer(task, Trajectory(steps=[Step.final("It is 9,984.2 INR")])).success
+    near = scorer(task, Trajectory(steps=[Step.final("9000")]))
+    assert not near.success
+    assert 0.9 < near.correctness < 0.91
+    assert not scorer(task, Trajectory(steps=[Step.final("no idea")])).success
+
+
+def test_regex_match_uses_task_expected_as_pattern() -> None:
+    task = Task(id="t", prompt="q", expected=r"^O-\d{5}$")
+    assert regex_match()(task, Trajectory(steps=[Step.final("O-88121")])).success
+    assert not regex_match()(task, Trajectory(steps=[Step.final("order O-88121")])).success
+    either = regex_match(r"shipped|delivered")
+    assert either(task, Trajectory(steps=[Step.final("delivered")])).success
+
+
+def test_get_scorer_rejects_unknown_names() -> None:
+    assert get_scorer("exact") is exact_match
+    with pytest.raises(ValueError, match="unknown scorer"):
+        get_scorer("vibes")
 
 
 def test_compute_metrics_aggregates_cost_tokens_tools_and_recovery() -> None:
