@@ -15,3 +15,23 @@ htmlcov/
 *.jsonl
 .idea/
 .vscode/
+
+# Institute templates, forms, and class lists stay on each member's machine
+docs/
+
+# Experiment outputs
+*.db
+/report.html
+/report.md
+/live_report.html
+
+# LaTeX build files
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
