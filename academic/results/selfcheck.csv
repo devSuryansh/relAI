@@ -1,0 +1,6 @@
+agent,planted,planning,tool_misuse,context,recovery,horizon,unclassified,none,agreement
+naive,recovery,0,0,0,25,0,0,35,1.0
+retry,control,0,0,0,1,11,0,48,0.8
+guessing,planning,55,0,0,0,0,0,5,1.0
+looping,context,0,0,55,0,0,0,5,1.0
+careless,tool_misuse,0,60,0,0,0,0,0,1.0

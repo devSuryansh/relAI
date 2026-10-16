@@ -1,0 +1,7 @@
+$ relai stress reliability --agent naive --agent retry:1 --agent retry:3 --trials 5
+success rate as tool timeouts increase
+agent \ timeout rate  0     0.1   0.2   0.3   0.4   0.5
+--------------------  ----  ----  ----  ----  ----  ----
+naive                 1.00  0.87  0.70  0.58  0.45  0.38
+retry:1               1.00  1.00  0.92  0.77  0.68  0.53
+retry:3               1.00  1.00  1.00  1.00  0.92  0.82

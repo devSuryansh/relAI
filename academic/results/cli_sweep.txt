@@ -1,0 +1,19 @@
+$ relai sweep reliability --param max_retries=0,1,2,3,4 --timeout-rate 0.3 --trials 5 --min-success 0.95
+variant        success  95% CI        pass^k  consistent  cost     latency  recovery  horizon
+-------------  -------  ------------  ------  ----------  -------  -------  --------  -------
+max_retries=3  1.00     [1.00, 1.00]  1.00    1.00        $0.0030  1116ms   1.00      8.8
+max_retries=4  1.00     [1.00, 1.00]  1.00    1.00        $0.0030  1116ms   1.00      8.8
+max_retries=2  0.98     [0.95, 1.00]  0.92    0.92        $0.0030  1116ms   0.98      8.7
+max_retries=1  0.77     [0.67, 0.88]  0.33    0.33        $0.0025  947ms    0.79      7.2
+max_retries=0  0.58     [0.38, 0.77]  0.25    0.33        $0.0016  543ms    0.58      5.0
+
+failure modes (max_retries=3): {'horizon': 12}
+failure modes (max_retries=4): {'horizon': 12}
+failure modes (max_retries=2): {'recovery': 1, 'horizon': 12}
+failure modes (max_retries=1): {'recovery': 14, 'horizon': 2}
+failure modes (max_retries=0): {'recovery': 25}
+
+max_retries=3 vs max_retries=4 on 60 paired runs: max_retries=3 alone passed 0, max_retries=4 alone passed 0; McNemar p = 1.0000 (not significant)
+
+Pareto front (success, cost, latency): max_retries=3, max_retries=4, max_retries=2, max_retries=1, max_retries=0
+Recommended: max_retries=2 (success 0.98, $0.0030 and 1116 ms per run), the cheapest setting with success >= 0.95.

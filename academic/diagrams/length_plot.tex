@@ -1,0 +1,29 @@
+\documentclass[border=6pt]{standalone}
+\input{relai-style}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\begin{document}
+\begin{tikzpicture}
+  \begin{axis}[
+      width=9cm, height=5.6cm,
+      xlabel={Tool calls the task needs, $L$}, ylabel={Success rate},
+      xmin=0.5, xmax=5.5, ymin=0, ymax=1.05,
+      xtick={1,2,3,5},
+      ytick={0,0.25,0.5,0.75,1},
+      grid=major, grid style={draw=line!40},
+      legend style={font=\scriptsize, at={(0.03,0.03)}, anchor=south west, draw=line, fill=white},
+      tick label style={font=\scriptsize}, label style={font=\small},
+    ]
+    \addplot[only marks, mark=*, mark size=2.4pt, color=crimson]
+      table[x=calls, y=measured, col sep=comma, restrict expr to domain={\thisrow{retries}}{0:0}] {../results/length_check.csv};
+    \addlegendentry{no retry, measured}
+    \addplot[domain=1:5, samples=50, thick, dashed, color=crimson] {0.7^x};
+    \addlegendentry{no retry, $(1-p)^L$}
+    \addplot[only marks, mark=square*, mark size=2.4pt, color=teal]
+      table[x=calls, y=measured, col sep=comma, restrict expr to domain={\thisrow{retries}}{1:1}] {../results/length_check.csv};
+    \addlegendentry{one retry, measured}
+    \addplot[domain=1:5, samples=50, thick, dashed, color=teal] {(1-0.09)^x};
+    \addlegendentry{one retry, $(1-p^2)^L$}
+  \end{axis}
+\end{tikzpicture}
+\end{document}

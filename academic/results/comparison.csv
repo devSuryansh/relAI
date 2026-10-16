@@ -1,0 +1,4 @@
+variant,success,ci_low,ci_high,pass_hat_k,consistency,cost_usd,latency_ms,recovery,steps,n_planning,n_tool_misuse,n_context,n_recovery,n_horizon,n_unclassified
+retry:3,1.0,1.0,1.0,1.0,1.0,0.002983,1115.8,1.0,8.77,0,0,0,0,12,0
+retry:1,0.7667,0.6667,0.8833,0.3333,0.3333,0.002483,946.6,0.7878,7.25,0,0,0,14,2,0
+naive,0.5833,0.3833,0.7667,0.25,0.3333,0.001567,543.2,0.5833,4.97,0,0,0,25,0,0

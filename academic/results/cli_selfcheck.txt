@@ -1,0 +1,11 @@
+$ relai selfcheck --trials 5
+diagnosed root cause per agent, reliability suite, timeout rate 0.3
+agent     planted      planning  tool_misuse  context  recovery  horizon  unclassified  none  agreement
+--------  -----------  --------  -----------  -------  --------  -------  ------------  ----  ---------
+naive     recovery     0         0            0        25        0        0             35    1.00
+retry     (control)    0         0            0        1         11       0             48    0.80
+guessing  planning     55        0            0        0         0        0             5     1.00
+looping   context      0         0            55       0         0        0             5     1.00
+careless  tool_misuse  0         60           0        0         0        0             0     1.00
+
+precision by mode: context 1.00, planning 1.00, recovery 1.00, tool_misuse 1.00

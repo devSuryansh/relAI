@@ -1,0 +1,46 @@
+\documentclass[border=10pt]{standalone}
+\input{relai-style}
+\usepackage{pgfgantt}
+\begin{document}
+\begin{ganttchart}[
+    time slot format=isodate,
+    time slot unit=day,
+    x unit=0.55mm,
+    y unit chart=6.2mm,
+    y unit title=6mm,
+    vgrid={*{6}{draw=none},dotted},
+    title/.append style={fill=navy!12, draw=navy},
+    title label font=\scriptsize\bfseries,
+    bar label font=\scriptsize,
+    group label font=\scriptsize\bfseries,
+    milestone label font=\scriptsize\bfseries,
+    bar/.append style={fill=teal!70, draw=teal},
+    bar incomplete/.append style={fill=amber!35, draw=amber},
+    group/.append style={fill=navy, draw=navy},
+    milestone/.append style={fill=crimson, draw=crimson},
+    progress label text={\scriptsize #1\%},
+    bar height=0.55,
+    group height=0.3,
+    today=2026-10-17,
+    today rule/.style={draw=crimson, thick, dashed},
+    today label=Review 17 Oct,
+    today label font=\scriptsize\bfseries\color{crimson},
+  ]{2026-08-01}{2027-04-30}
+  \gantttitlecalendar{year, month=shortname} \\
+  \ganttgroup{Capstone Project 1 (semester VII)}{2026-08-01}{2026-12-20} \\
+  \ganttbar[progress=100]{Problem study, literature survey}{2026-08-01}{2026-08-31} \\
+  \ganttbar[progress=100]{Synopsis and proposal}{2026-08-20}{2026-09-19} \\
+  \ganttbar[progress=100]{v0.1: types, protocol, harness, 4 modes}{2026-09-01}{2026-09-16} \\
+  \ganttbar[progress=100]{Requirements and design (UML, DFD, ER)}{2026-09-14}{2026-10-10} \\
+  \ganttbar[progress=100]{v0.2: faults, trials, stats, optimizer, store}{2026-09-28}{2026-10-17} \\
+  \ganttbar[progress=60]{First research paper}{2026-10-05}{2026-11-15} \\
+  \ganttmilestone{Design/implementation review}{2026-10-17} \\
+  \ganttbar[progress=0]{Live LLM experiments (hosted, local)}{2026-10-19}{2026-11-22} \\
+  \ganttbar[progress=0]{Benchmark adapters, more suites}{2026-11-02}{2026-12-06} \\
+  \ganttbar[progress=0]{Report, final review of Capstone 1}{2026-11-23}{2026-12-20} \\
+  \ganttgroup{Capstone Project 2 (semester VIII)}{2027-01-04}{2027-04-30} \\
+  \ganttbar[progress=0]{Dashboard, trace import, new modes}{2027-01-04}{2027-02-28} \\
+  \ganttbar[progress=0]{Large-scale study, paper revision}{2027-02-15}{2027-04-10} \\
+  \ganttbar[progress=0]{Final report, release 1.0, viva}{2027-04-01}{2027-04-30}
+\end{ganttchart}
+\end{document}

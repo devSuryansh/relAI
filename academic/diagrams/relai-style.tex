@@ -1,0 +1,31 @@
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.multipart,shapes.geometric,fit,backgrounds,calc,shadows}
+
+\definecolor{navy}{HTML}{1F3A5F}
+\definecolor{teal}{HTML}{0C6B58}
+\definecolor{amber}{HTML}{D9822B}
+\definecolor{crimson}{HTML}{B42318}
+\definecolor{violet}{HTML}{6B21A8}
+\definecolor{sky}{HTML}{2186EB}
+\definecolor{slate}{HTML}{486581}
+\definecolor{mist}{HTML}{F0F4F8}
+\definecolor{line}{HTML}{9FB3C8}
+
+\tikzset{
+  >={Stealth[length=2.6mm]},
+  box/.style={draw=navy, very thick, rounded corners=3pt, fill=white, align=center,
+    inner sep=5pt, font=\small, minimum height=9mm},
+  softbox/.style={box, draw=slate, thick, fill=mist},
+  layer/.style={draw=line, dashed, rounded corners=6pt, inner sep=7pt},
+  layertitle/.style={font=\bfseries\small, text=slate, anchor=north west},
+  flow/.style={->, thick, draw=navy},
+  dflow/.style={->, thick, draw=slate, dashed},
+  lbl/.style={font=\scriptsize, text=slate, fill=white, inner sep=1.5pt},
+  umlclass/.style={draw=navy, thick, fill=white, rectangle split, rectangle split parts=3,
+    rectangle split part fill={navy!12,white,white}, align=left, font=\scriptsize,
+    inner sep=3pt, text width=#1},
+  umlclass/.default=38mm,
+}

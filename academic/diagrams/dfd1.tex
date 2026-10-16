@@ -1,0 +1,48 @@
+\documentclass[tikz,border=10pt]{standalone}
+\input{relai-style}
+\tikzset{
+  ext/.style={draw=navy, very thick, fill=mist, minimum width=2.8cm, minimum height=1.1cm,
+    align=center, font=\small\bfseries},
+  proc/.style={circle, draw=teal, very thick, fill=white, align=center, font=\scriptsize,
+    minimum size=2.9cm, inner sep=1pt},
+  store/.style={draw=none, minimum width=3.4cm, minimum height=0.9cm, align=left,
+    font=\scriptsize, append after command={
+      (\tikzlastnode.north west) edge[draw=amber, very thick] (\tikzlastnode.north east)
+      (\tikzlastnode.south west) edge[draw=amber, very thick] (\tikzlastnode.south east)
+      (\tikzlastnode.north west) edge[draw=amber, very thick] (\tikzlastnode.south west)}},
+  df/.style={->, thick, draw=navy},
+  dl/.style={font=\scriptsize, fill=white, align=center, inner sep=1.5pt},
+}
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[ext] (user) at (-1,0) {Researcher};
+  \node[ext] (agent) at (9.5,-3.4) {Agent\\under test};
+
+  \node[proc] (p1) at (3.6,0) {\textbf{1.0}\\Load suite and\\build environment};
+  \node[proc] (p2) at (3.6,-4.2) {\textbf{2.0}\\Execute trials\\with injected\\faults};
+  \node[proc] (p3) at (0.2,-8.0) {\textbf{3.0}\\Score and\\measure};
+  \node[proc] (p4) at (7.0,-8.0) {\textbf{4.0}\\Classify\\failures};
+  \node[proc] (p5) at (3.6,-12.0) {\textbf{5.0}\\Compare and\\optimize};
+  \node[proc] (p6) at (9.8,-12.0) {\textbf{6.0}\\Store and\\report};
+
+  \node[store] (d1) at (9.2,0) {\textbf{D1}\quad Suite files (YAML)};
+  \node[store] (d2) at (-3.6,-4.2) {\textbf{D2}\quad Run results\\\phantom{\textbf{D2}}\quad (trajectories)};
+  \node[store] (d3) at (13.6,-9.2) {\textbf{D3}\quad Run store\\\phantom{\textbf{D3}}\quad (SQLite)};
+  \node[store] (d4) at (13.6,-14.8) {\textbf{D4}\quad Reports\\\phantom{\textbf{D4}}\quad (HTML, Markdown)};
+
+  \draw[df] (user) -- node[dl, above] {suite name,\\faults, seed} (p1);
+  \draw[df] (d1) -- node[dl, above] {tasks, tools} (p1);
+  \draw[df] (p1) -- node[dl, right] {tasks, ToolEnv} (p2);
+  \draw[df] ([yshift=4mm]p2.east) -- node[dl, above] {task, trial, seed,\\tool results} ([yshift=4mm]agent.west |- p2.east);
+  \draw[df] ([yshift=-6mm]agent.west |- p2.east) -- node[dl, below] {tool calls,\\trajectory} ([yshift=-6mm]p2.east);
+  \draw[df] (p2) -- node[dl, above] {RunResult} (d2);
+  \draw[df] (d2.south) |- node[dl, pos=0.3, left] {trajectory} (p3.west);
+  \draw[df] (p2) -- node[dl, right, pos=0.6] {trajectory,\\score} (p4);
+  \draw[df] (p3) -- node[dl, left, pos=0.5] {metrics} (p5);
+  \draw[df] (p4) -- node[dl, right, pos=0.5] {failure\\reports} (p5);
+  \draw[df] (p5) -- node[dl, above] {ranking, CIs,\\Pareto front} (p6);
+  \draw[df] (p6) -- node[dl, above, sloped] {experiments} (d3);
+  \draw[df] (p6) -- node[dl, below, sloped] {HTML, Markdown} (d4);
+  \draw[df] (p5.south) -- ++(0,-0.9) -| node[dl, pos=0.2, below] {ranked report, recommendation} (-6.0,0) -- (user.west);
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,12 @@
+$ relai run reliability --agent naive --agent retry:1 --agent retry:3 --trials 5 --timeout-rate 0.3
+variant  success  95% CI        pass^k  consistent  cost     latency  recovery  horizon
+-------  -------  ------------  ------  ----------  -------  -------  --------  -------
+retry:3  1.00     [1.00, 1.00]  1.00    1.00        $0.0030  1116ms   1.00      8.8
+retry:1  0.77     [0.67, 0.88]  0.33    0.33        $0.0025  947ms    0.79      7.2
+naive    0.58     [0.38, 0.77]  0.25    0.33        $0.0016  543ms    0.58      5.0
+
+failure modes (retry:3): {'horizon': 12}
+failure modes (retry:1): {'recovery': 14, 'horizon': 2}
+failure modes (naive): {'recovery': 25}
+
+retry:3 vs retry:1 on 60 paired runs: retry:3 alone passed 14, retry:1 alone passed 0; McNemar p = 0.0001 (significant)
