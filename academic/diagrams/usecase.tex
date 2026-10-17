@@ -1,0 +1,54 @@
+\documentclass[tikz,border=10pt]{standalone}
+\input{relai-style}
+\tikzset{
+  uc/.style={ellipse, draw=navy, very thick, fill=white, align=center, font=\small,
+    minimum width=4.6cm, minimum height=1.05cm, inner sep=1pt},
+  actor/.style={align=center, font=\small\bfseries},
+  assoc/.style={thick, draw=navy},
+  incl/.style={->, dashed, thick, draw=slate},
+  stereo/.style={font=\scriptsize\itshape, text=slate, fill=white, inner sep=1pt},
+}
+\newcommand{\stickman}[2]{%
+  \begin{scope}[shift={#1}, thick, draw=navy]
+    \draw (0,0.55) circle (0.22);
+    \draw (0,0.33) -- (0,-0.35);
+    \draw (-0.42,0.08) -- (0.42,0.08);
+    \draw (0,-0.35) -- (-0.32,-0.85);
+    \draw (0,-0.35) -- (0.32,-0.85);
+    \node[actor, below] at (0,-0.9) {#2};
+  \end{scope}}
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \draw[draw=navy, very thick, rounded corners=8pt, fill=mist] (-3.4,1.2) rectangle (9.4,-14.2);
+  \node[font=\bfseries, text=navy] at (3,0.7) {Agent Reliability Lab};
+
+  \node[uc] (suite) at (0,-0.6) {Define task suite};
+  \node[uc] (faults) at (0,-2.0) {Configure faults and seed};
+  \node[uc] (plug) at (0,-3.4) {Plug in an agent};
+  \node[uc] (run) at (0,-5.2) {Run evaluation\\ ($k$ trials per task)};
+  \node[uc] (compare) at (0,-7.0) {Compare variants};
+  \node[uc] (sweep) at (0,-8.4) {Sweep settings and\\ get recommendation};
+  \node[uc] (stress) at (0,-9.9) {Stress test};
+  \node[uc] (self) at (0,-11.3) {Self-check classifier};
+  \node[uc] (report) at (0,-12.8) {Store and report results};
+
+  \node[uc] (score) at (6.0,-4.15) {Score runs};
+  \node[uc] (classify) at (6.0,-6.25) {Classify failures};
+  \node[uc] (stats) at (6.0,-7.75) {Intervals and\\ paired test};
+  \node[uc] (pareto) at (6.0,-9.1) {Pareto front};
+
+  \draw[incl] (run) -- node[stereo, above, sloped] {$\ll$include$\gg$} (score);
+  \draw[incl] (run) -- node[stereo, below, sloped] {$\ll$include$\gg$} (classify);
+  \draw[incl] (compare) -- node[stereo, above, sloped] {$\ll$include$\gg$} (stats);
+  \draw[incl] (sweep) -- node[stereo, above, sloped] {$\ll$include$\gg$} (pareto);
+
+  \stickman{(-6.2,-6.0)}{Researcher /\\ Developer}
+  \foreach \u in {suite, faults, plug, run, compare, sweep, stress, self, report} {
+    \draw[assoc] (-5.75,-5.95) -- (\u.west);
+  }
+  \stickman{(12.2,-5.25)}{Agent under test}
+  \draw[assoc] (11.75,-5.2) -- (run.east |- 0,-5.2);
+  \stickman{(12.2,-10.6)}{Model API\\ \scriptsize (optional)}
+  \draw[assoc, dashed] (12.2,-9.8) -- (12.2,-7.0);
+\end{tikzpicture}
+\end{document}

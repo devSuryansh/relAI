@@ -1,0 +1,33 @@
+\documentclass[tikz,border=10pt]{standalone}
+\input{relai-style}
+\tikzset{
+  term/.style={box, rounded corners=10pt, draw=teal, minimum width=3.6cm, font=\small},
+  proc/.style={box, minimum width=5.6cm, font=\small},
+  dec/.style={diamond, aspect=2.4, draw=amber, very thick, fill=white, align=center,
+    font=\small, inner sep=1pt},
+}
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm, node distance=0.55cm]
+  \node[term] (start) {Start};
+  \node[proc, below=of start] (grid) {Define parameter grid, e.g.\\ max\_retries = 0, 1, 2, 3, 4};
+  \node[proc, below=of grid] (cfg) {Build one agent per configuration};
+  \node[proc, below=of cfg] (eval) {Evaluate every configuration on the\\ same tasks, trials, seed, and faults};
+  \node[proc, below=of eval] (front) {Pareto front: keep configurations\\ not dominated on success, cost, latency};
+  \node[proc, below=of front] (filter) {Keep configurations with\\ success $\ge$ target};
+  \node[dec, below=of filter] (any) {any\\ left?};
+  \node[proc, minimum width=4.6cm] (pick) at ($(any.south)+(-3.3,-1.2)$) {Recommend the cheapest,\\ then fastest};
+  \node[proc, minimum width=4.6cm] (none) at ($(any.south)+(3.3,-1.2)$) {Report that no setting\\ meets the target};
+  \node[term, below=3.1cm of any] (stop) {End: ranked table, front,\\ recommendation};
+
+  \draw[flow] (start) -- (grid);
+  \draw[flow] (grid) -- (cfg);
+  \draw[flow] (cfg) -- (eval);
+  \draw[flow] (eval) -- (front);
+  \draw[flow] (front) -- (filter);
+  \draw[flow] (filter) -- (any);
+  \draw[flow] (any.west) -| node[lbl, above, pos=0.25] {yes} (pick.north);
+  \draw[flow] (any.east) -| node[lbl, above, pos=0.25] {no} (none.north);
+  \draw[flow] (pick.south) |- (stop.west);
+  \draw[flow] (none.south) |- (stop.east);
+\end{tikzpicture}
+\end{document}

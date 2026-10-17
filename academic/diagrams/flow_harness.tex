@@ -1,0 +1,46 @@
+\documentclass[tikz,border=10pt]{standalone}
+\input{relai-style}
+\tikzset{
+  term/.style={box, rounded corners=10pt, draw=teal, minimum width=3.6cm, font=\small},
+  proc/.style={box, minimum width=5.4cm, font=\small},
+  dec/.style={diamond, aspect=2.4, draw=amber, very thick, fill=white, align=center,
+    font=\small, inner sep=1pt},
+}
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm, node distance=0.55cm]
+  \node[term] (start) {Start};
+  \node[proc, below=of start] (load) {Load suite; build ToolEnv with\\ fault policy and seed};
+  \node[proc, below=of load] (variant) {Take next variant};
+  \node[proc, below=of variant] (task) {Take next task};
+  \node[proc, below=of task] (trial) {Copy task with trial $t$ and seed\\ in metadata};
+  \node[proc, below=of trial] (runit) {Time \texttt{agent.run(task)};\\ tool calls meet seeded faults};
+  \node[dec, below=of runit] (crash) {agent\\ raised?};
+  \node[proc, right=1.2cm of crash] (err) {Record failed run with\\ an error step};
+  \node[proc, below=of crash] (score) {Score answer; compute metrics;\\ classify failures};
+  \node[proc, below=of score] (append) {Append RunResult (task, trial)};
+  \node[dec, below=of append] (moretrial) {more\\ trials?};
+  \node[dec, below=of moretrial] (moretask) {more\\ tasks?};
+  \node[dec, below=of moretask] (morevar) {more\\ variants?};
+  \node[proc, below=of morevar] (rank) {Build EvalReports; rank by success,\\ cost, latency};
+  \node[term, below=of rank] (stop) {End: ExperimentReport};
+
+  \draw[flow] (start) -- (load);
+  \draw[flow] (load) -- (variant);
+  \draw[flow] (variant) -- (task);
+  \draw[flow] (task) -- (trial);
+  \draw[flow] (trial) -- (runit);
+  \draw[flow] (runit) -- (crash);
+  \draw[flow] (crash) -- node[lbl, above] {yes} (err);
+  \draw[flow] (err) |- (score.east);
+  \draw[flow] (crash) -- node[lbl, right] {no} (score);
+  \draw[flow] (score) -- (append);
+  \draw[flow] (append) -- (moretrial);
+  \draw[flow] (moretrial.west) -- node[lbl, above, pos=0.3] {yes} ++(-1.6,0) |- (trial.west);
+  \draw[flow] (moretrial) -- node[lbl, right] {no} (moretask);
+  \draw[flow] (moretask.west) -- node[lbl, above, pos=0.3] {yes} ++(-2.4,0) |- (task.west);
+  \draw[flow] (moretask) -- node[lbl, right] {no} (morevar);
+  \draw[flow] (morevar.west) -- node[lbl, above, pos=0.3] {yes} ++(-3.2,0) |- (variant.west);
+  \draw[flow] (morevar) -- node[lbl, right] {no} (rank);
+  \draw[flow] (rank) -- (stop);
+\end{tikzpicture}
+\end{document}
