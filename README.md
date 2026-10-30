@@ -199,9 +199,9 @@ flowchart LR
   as C(c, k) / C(n, k) from c successes in n trials. It measures dependability
   where pass@k measures capability.
 
-See [documentation/architecture.md](documentation/architecture.md) for the
+See [docs/architecture.md](docs/architecture.md) for the
 module map and data flow, and
-[documentation/failure-taxonomy.md](documentation/failure-taxonomy.md) for
+[docs/failure-taxonomy.md](docs/failure-taxonomy.md) for
 the exact rule behind each failure mode.
 
 ## Writing a suite
@@ -253,7 +253,7 @@ src/relai/
   cli.py          the relai command
 tests/            81 tests, one file per module
 examples/         runnable scripts
-documentation/    architecture and failure taxonomy
+docs/             architecture and failure taxonomy
 academic/         progress review pack: research paper, slides, report, diagrams
 ```
 

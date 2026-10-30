@@ -109,7 +109,7 @@ something, say exactly what you did.
 
 | Owns | Files |
 | --- | --- |
-| Overall architecture and design rules | `AGENTS.md`, `documentation/architecture.md` |
+| Overall architecture and design rules | `AGENTS.md`, `docs/architecture.md` |
 | Domain types and the agent interface | `src/relai/types.py`, `src/relai/agents.py` |
 | Tool environment and fault injection | `src/relai/env.py` |
 | Harness, repeated trials, crash capture, pass@k and pass^k | `src/relai/harness.py` |
@@ -134,7 +134,7 @@ Presents slides 1 to 4, 7, 8, 13, 17, and 19.
 | Owns | Files |
 | --- | --- |
 | Scorers and metric derivation | `src/relai/metrics.py` |
-| Failure taxonomy and classifier | `src/relai/analysis.py`, `documentation/failure-taxonomy.md` |
+| Failure taxonomy and classifier | `src/relai/analysis.py`, `docs/failure-taxonomy.md` |
 | Confidence intervals and the paired test | `src/relai/stats.py` |
 | Configuration sweep, Pareto front, recommendation | `src/relai/optimize.py` |
 | Results analysis and related-work survey | `academic/results/`, paper sections II and V |
@@ -699,7 +699,7 @@ Every number comes from `python academic/results/make_results.py`.
 | `src/relai/` | The package |
 | `tests/` | 81 tests |
 | `examples/` | Runnable scripts, including a live LLM example and a custom agent |
-| `documentation/` | Architecture and failure taxonomy |
+| `docs/` | Architecture and failure taxonomy |
 | `academic/paper/` | Research paper source and PDF |
 | `academic/progress-review/` | Slides, slide builder, progress report |
 | `academic/diagrams/` | All diagrams, as TikZ source, PDF, and PNG |

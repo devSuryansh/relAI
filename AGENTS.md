@@ -21,7 +21,7 @@ suite.
 - `src/relai/report.py`: HTML and Markdown reports
 - `src/relai/adapters/`: OpenAI-compatible model adapter
 - `src/relai/cli.py`: `relai demo`, `suites`, `run`, `sweep`, `stress`, `selfcheck`, `report`
-- `documentation/`: architecture and failure taxonomy
+- `docs/`: architecture and failure taxonomy
 - `academic/`: progress review deliverables (paper, slides, report, diagrams)
 
 ## Commands
