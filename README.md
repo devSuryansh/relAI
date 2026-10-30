@@ -55,6 +55,20 @@ pip install -e ".[dev]"
 Python 3.11 or newer. Runtime dependencies are Pydantic and PyYAML only. The
 offline agents and every test run without a GPU, a network, or an API key.
 
+## Documentation
+
+Open [website/index.html](website/index.html) in a browser. Eight numbered
+steps walk through what the lab does, how to install it, how a run is put
+together, faults, failure modes, scores, plugging in an agent, and a
+glossary. The other pages are there when you come back: suites, trajectories,
+comparison, stress and sweeps, reports, the self-check, the agent contract,
+live models, and writing your own suite. Each page defines the word it
+introduces, says why it helps, and shows a command with the output that
+command produced in this repository.
+
+Regenerate the pages, after editing `website/pages/`, with
+`python website/build.py`.
+
 ## Quick tour
 
 ```bash
@@ -202,7 +216,8 @@ flowchart LR
 See [docs/architecture.md](docs/architecture.md) for the
 module map and data flow, and
 [docs/failure-taxonomy.md](docs/failure-taxonomy.md) for
-the exact rule behind each failure mode.
+the exact rule behind each failure mode. The walkthrough above explains the
+same ideas one topic at a time.
 
 ## Writing a suite
 
@@ -251,8 +266,9 @@ src/relai/
   report.py       HTML and Markdown reports
   adapters/       OpenAI-compatible tool-calling agent
   cli.py          the relai command
-tests/            81 tests, one file per module
+tests/            88 tests, one file per module plus the website
 examples/         runnable scripts
+website/          walkthrough site (open index.html)
 docs/             architecture and failure taxonomy
 academic/         progress review pack: research paper, slides, report, diagrams
 ```

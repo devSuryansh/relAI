@@ -1,9 +1,9 @@
 """Build the Design/Implementation Phase progress review deck from the institute template.
 
     /path/to/venv-with-python-pptx/bin/python academic/progress-review/build_ppt.py \
-        [docs/Project_PPT_template.pptx]
+        [context/Project_PPT_template.pptx]
 
-The template stays on each member's machine (docs/ is not tracked). The deck
+The template stays on each member's machine (context/ is not tracked). The deck
 follows its content format: headings Arial 32 centred, subheadings Arial 18 bold,
 text Arial 16, references Times New Roman 12. Speaker notes name the presenter.
 """
@@ -43,7 +43,7 @@ MEMBERS = [
 
 
 def main() -> None:
-    template = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "docs" / "Project_PPT_template.pptx"
+    template = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "context" / "Project_PPT_template.pptx"
     prs = Presentation(str(template))
     title_slide, index_slide, format_slide, thanks_slide, feedback_slide = list(prs.slides)
     content_layout = prs.slide_layouts[1]
@@ -222,7 +222,7 @@ def main() -> None:
     ], size=14)
     _text(s, LEFT + half + 0.3, TOP, half, BOTTOM - TOP, [
         ("sub", "Done"),
-        ("bullet", "v0.2 package: 17 modules, 81 tests, CI, docs"),
+        ("bullet", "v0.2 package: 17 modules, 81 tests, CI, walkthrough site"),
         ("bullet", "SRS, class, sequence, DFD, ER, Gantt"),
         ("sub", "Next (Oct to Dec)"),
         ("bullet", "Live LLM study: hosted and local models"),

@@ -2,8 +2,8 @@
 
     /path/to/venv-with-python-docx/bin/python academic/docs_build/build_synopsis.py
 
-Base template: docs/Synopsis_First_Draft.docx (cover logo, page numbering).
-Format rules from docs/Final_synopsis_format: headings Times New Roman 18 bold
+Base template: context/Synopsis_First_Draft.docx (cover logo, page numbering).
+Format rules from context/Final_synopsis_format: headings Times New Roman 18 bold
 centred, text 16 justified, subheadings 16 bold left, index 24, references 12.
 """
 
@@ -19,7 +19,7 @@ from docxkit import NAVY, Builder, Style, build_twice  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 DIAGRAMS = ROOT / "academic" / "diagrams"
 OUT_DIR = ROOT / "academic" / "synopsis"
-TEMPLATE = ROOT / "docs" / "Synopsis_First_Draft.docx"
+TEMPLATE = ROOT / "context" / "Synopsis_First_Draft.docx"
 
 STYLE = Style(body=16, line=1.15, after=6, h1=18, h2=16, h3=16, caption=12, table=12,
               h1_upper=False, numbered_heading=True)
@@ -430,6 +430,7 @@ def conclusion(b: Builder) -> None:
     b.paragraph("The expected outcomes of the completed project are:")
     b.bullets([
         "An installable, tested Python package and a failure taxonomy validated with planted defects.",
+        "A walkthrough website that explains each feature in plain language, with definitions and worked commands.",
         "Reproducible experiments comparing live LLM agents under identical faults, and a research paper.",
     ])
 

@@ -14,6 +14,7 @@ Project 1 (group G053), and the sources to rebuild all of it.
 | Experiment data behind every number | [results/](results/) |
 | Code and terminal snapshots | [snapshots/](snapshots/) |
 | Sample HTML report | [results/sample_report.html](results/sample_report.html) |
+| Walkthrough website | [website/index.html](../website/index.html). Open in a browser. Rebuild with `python website/build.py` |
 
 ## Rebuild
 
@@ -26,16 +27,19 @@ academic/diagrams/build.sh
 
 # snapshots and slides (needs a venv with pygments, pillow, python-pptx)
 python academic/snapshots/make_snapshots.py
-python academic/progress-review/build_ppt.py docs/Project_PPT_template.pptx
+python academic/progress-review/build_ppt.py context/Project_PPT_template.pptx
 
 # paper and progress report
 (cd academic/paper && pdflatex relai_paper.tex && pdflatex relai_paper.tex)
 (cd academic/progress-review && pdflatex progress_report.tex && pdflatex progress_report.tex)
+
+# walkthrough website
+python website/build.py
 
 # final synopsis and project report (needs python-docx, pillow, LibreOffice, pdftotext)
 python academic/docs_build/build_synopsis.py
 python academic/docs_build/build_report.py
 ```
 
-The institute template for the slides lives in `docs/`, which stays on each
+The institute template for the slides lives in `context/`, which stays on each
 member's machine and is not tracked.

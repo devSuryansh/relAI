@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What relAI does · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html" aria-current="page">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Start here</p>
+      <p class="tour"><span>Step 1 of 8</span><a href="install.html">Install and first run</a></p>
+      <h1>What relAI does</h1>
+      <h2>Definition</h2>
+<p class="def">Agent Reliability Lab (<code>relai</code>) runs an AI agent several times, breaks its tools on a schedule you can repeat, and writes down every step. From that record it scores the run and names why a failed run failed.</p>
+
+<h2>Why this helps you</h2>
+<p>Most agent benchmarks keep one number: did the agent finish the task? That number hides the reason. One agent skips a tool it needed. Another calls a tool it was never given. A third repeats the same call after the answer already came back. A fourth gives up after a single timeout. Two of those agents can finish at the same rate and still be failing for different reasons.</p>
+<p>If you already have an agent, this lab lets you keep the whole path, not only the finish line. You can see the cost, the time, how often a retry saved the run, and whether the agent succeeds every time or only sometimes. The same broken tool calls are handed to every agent you compare, so a higher score means that agent handled the failure.</p>
+<p>The sidebar is the library. The numbers beside eight of the pages are a first visit: follow them once, in order. After that, open the page you need. Each page defines the word it introduces, shows a command, and shows the output that command produced in this repository.</p>
+
+<h2>Try this</h2>
+<p>From a checkout where <code>relai</code> is installed, run the scripted demo. It needs no API key and no network.</p>
+<pre><code>relai demo</code></pre>
+
+<h2>What you should see</h2>
+<pre><code>variant    success  95% CI        cost     latency  recovery  horizon
+---------  -------  ------------  -------  -------  --------  -------
+resilient  1.00     [0.44, 1.00]  $0.0030  0ms      1.00      4.3
+brittle    0.33     [0.06, 0.79]  $0.0020  0ms      0.67      2.0
+
+failure modes (resilient): none
+failure modes (brittle): {'planning': 1, 'recovery': 1}
+
+resilient vs brittle on 3 paired runs: resilient alone passed 2, brittle alone passed 0; McNemar p = 0.5000 (not significant)</code></pre>
+
+<h2>How to read it</h2>
+<p>Three tiny tasks. The resilient agent plans, uses the tool it was given, and retries after a timeout, so it passes all three. The brittle agent guesses "Lyon" instead of searching, and it gives up after the weather tool times out, so it passes one task out of three. Success 0.33 is that one pass.</p>
+<p>The column <code>95% CI</code> is a <a href="glossary.html#confidence-interval">confidence interval</a>. With only three tasks it is very wide: brittle's interval runs from 0.06 to 0.79. The last line is a <a href="glossary.html#mcnemar">paired test</a>. Resilient was the only one to pass two of the tasks, but three pairs are too few for the test to call that a real difference (p = 0.50). A later page runs the same idea on 60 pairs, and there the difference is sharp.</p>
+<p><code>failure modes</code> counts labels, not tasks. Brittle picked up one planning failure and one recovery failure. Resilient picked up none. Those words are defined on <a href="failure-modes.html">Failure modes</a>.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix"><code>relai demo</code> plays two hand-written scripts against three fixed tasks. <code>relai run demo</code> is a different command: it loads the demo <a href="glossary.html#suite">suite</a> and runs the naive and retry baseline agents through real tool faults. The numbers will not match, and that is expected. The install page runs the second command.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="install.html">Install and first run</a> <a href="glossary.html">Glossary, if a word above was new</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

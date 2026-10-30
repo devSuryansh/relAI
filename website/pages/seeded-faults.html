@@ -1,0 +1,40 @@
+<h2>Definition</h2>
+<p class="def">A fault is a tool failure you schedule on purpose. relAI has three kinds: a timeout, an outage (<code>unavailable</code>), and fail-first-N, which times out the first N calls of a tool. The schedule for a call is fixed by the seed, the task id, the trial, the tool name, and the call number. Which agent is running never changes it.</p>
+
+<h2>Why this helps you</h2>
+<p>If two agents face different timeouts, the one with the higher score may simply have been luckier. A seeded schedule removes that luck. The third call to <code>weather</code> in trial 2 either times out for every agent or for none of them. A higher score then means the agent recovered, retried, or chose a better path. It does not mean the lab went easier on that agent.</p>
+<p>That is also why a comparison can be a paired test. Each pair is the same task and the same trial, so both agents met the same faults. The page on <a href="comparing-agents.html">comparing agents</a> uses those pairs.</p>
+
+<h2>Try this</h2>
+<pre><code>relai run reliability --agent naive --agent retry:1 --agent retry:3 --trials 5 --timeout-rate 0.3</code></pre>
+<p>The same idea from Python, if you want the schedule in your own code:</p>
+<pre><code>from relai import FaultPolicy
+
+policy = FaultPolicy(timeout_rate=0.3, error_rate=0.0, fail_first_n=0)
+print(policy.fault_for(seed=0, task_id="order_status", trial=2, tool="weather", call=3))</code></pre>
+<p>Call that twice. The string that comes back is the same both times, and it would be the same for any agent that made that call.</p>
+
+<h2>What you should see</h2>
+<pre><code>variant  success  95% CI        pass^k  consistent  cost     latency  recovery  horizon
+-------  -------  ------------  ------  ----------  -------  -------  --------  -------
+retry:3  1.00     [1.00, 1.00]  1.00    1.00        $0.0030  1116ms   1.00      8.8
+retry:1  0.77     [0.67, 0.88]  0.33    0.33        $0.0025  947ms    0.79      7.2
+naive    0.58     [0.38, 0.77]  0.25    0.33        $0.0016  543ms    0.58      5.0
+
+failure modes (retry:3): {'horizon': 12}
+failure modes (retry:1): {'recovery': 14, 'horizon': 2}
+failure modes (naive): {'recovery': 25}
+
+retry:3 vs retry:1 on 60 paired runs: retry:3 alone passed 14, retry:1 alone passed 0; McNemar p = 0.0001 (significant)</code></pre>
+
+<h2>How to read it</h2>
+<p>With 30% of calls timing out, an agent that never retries passes 58% of runs, and only 25% of tasks pass on all five trials (<code>pass^k</code>). One retry lifts success to 0.77. Three retries lift it to 1.00, at higher cost and latency, because failed calls still count: a timeout is billed the tool's price and the tool's declared latency, then the retry pays again.</p>
+<p>The call number is per tool, per run, starting at 1. The first time a run calls <code>order_status</code>, that is call 1, even if the agent already called a different tool. Fail-first-N is applied before the random draw: if <code>fail_first_n</code> is 1, call 1 of that tool is always a timeout, and later calls are drawn from the rates. <code>timeout_rate</code> and <code>error_rate</code> must add up to at most 1. A draw below the timeout rate is a timeout. A draw in the next band is an outage. Anything else runs the tool.</p>
+<p>You can limit faults to named tools with <code>FaultPolicy(tools=["weather"])</code>. The demo suite does that: only <code>weather</code> fails, and only its first call. The CLI flags <code>--timeout-rate</code>, <code>--error-rate</code>, and <code>--fail-first</code> override the rates written in the suite. <code>--seed</code> changes the schedule. The same seed repeats it.</p>
+<p>retry:3 still shows 12 horizon labels even though every answer was right. A horizon failure means the run used more steps than the task's budget. Retries add steps. The answer can be correct and the run can still be flagged. That distinction is the next page.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">A fault is an environment failure, recorded as an error step after the tool call. A bad argument, or a call to a tool that does not exist, is the agent's mistake. Those do not get an error step, and the classifier treats them as tool misuse. If your agent calls the tool itself and never goes through the recorder, the lab cannot inject the fault at all.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="failure-modes.html">Failure modes</a></p>

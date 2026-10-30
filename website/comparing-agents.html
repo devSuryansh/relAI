@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comparing agents · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html" aria-current="page">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Features</p>
+      
+      <h1>Comparing agents</h1>
+      <h2>Definition</h2>
+<p class="def">A comparison in relAI puts two or more variants on the same tasks, the same number of trials, and the same fault seed, then asks whether their success rates differ by more than chance. The paired test is an exact McNemar test on the runs where the two agents disagreed.</p>
+
+<h2>Why this helps you</h2>
+<p>A table that says 0.77 and 1.00 feels obvious. With a handful of tasks it may be noise, which is what the demo's p-value of 0.50 was telling you. With the reliability suite and five trials, the same kind of gap is 14 disagreements, all in one direction, and the p-value is 0.0001. The interval and the paired test are how you tell those two situations apart before you rewrite your agent.</p>
+
+<h2>Try this</h2>
+<pre><code>relai run reliability --agent naive --agent retry:1 --agent retry:3 --trials 5 --timeout-rate 0.3</code></pre>
+
+<h2>What you should see</h2>
+<pre><code>retry:3  1.00     [1.00, 1.00]  1.00    1.00
+retry:1  0.77     [0.67, 0.88]  0.33    0.33
+naive    0.58     [0.38, 0.77]  0.25    0.33
+
+retry:3 vs retry:1 on 60 paired runs: retry:3 alone passed 14, retry:1 alone passed 0; McNemar p = 0.0001 (significant)</code></pre>
+<p>The full table, including cost and latency, is on <a href="seeded-faults.html">Seeded faults</a>. The lines above are the comparison.</p>
+
+<h2>How to read it</h2>
+<p>Variants are ranked by success, then by lower cost, then by lower declared step latency, then by name. The paired sentence always compares the first two in that ranking. Here that is retry:3 against retry:1. Naive is in the table, and it is not in the sentence. Run a command with only the two agents you care about if you want that pair named.</p>
+<p>A pair is one task and one trial. Both agents saw it, and because the seed is shared they saw the same faults, as long as they made the same calls. Of the 60 pairs, 14 were passed by retry:3 only. None were passed by retry:1 only. The exact McNemar p-value uses only those discordant pairs. It is two-sided. The lab calls it significant when p is below 0.05.</p>
+<p>The interval is about one agent's success rate, not about the gap. retry:1's success sits in [0.67, 0.88]. retry:3's sits at [1.00, 1.00] because every one of the 60 runs passed, and the cluster bootstrap of a perfect score stays at 1. Intervals that do not overlap are a hint. The paired test is the actual comparison, because it keeps the matching faults together.</p>
+<p>From Python, the same test is <code>compare(report_a, report_b)</code> in <code>relai.stats</code>. It returns the two names, the pair counts (<code>both</code>, <code>a_only</code>, <code>b_only</code>, <code>neither</code>), and the p-value. <code>significant()</code> uses 0.05 unless you pass another alpha.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">A significant result says the success counts differ. It does not say the winner is cheaper, or that its failure labels are healthier. retry:3 wins the paired test and still carries 12 horizon flags. Read the failure line beside the p-value. Also, changing <code>--seed</code> or the timeout rate between two separate commands is not a paired comparison. Both agents have to be in the same command so they share the schedule.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="stress-and-sweeps.html">Stress and sweeps</a> <a href="scores.html">Scores, for what the columns mean</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

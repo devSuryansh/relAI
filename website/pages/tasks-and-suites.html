@@ -1,0 +1,45 @@
+<h2>Definition</h2>
+<p class="def">A suite is the experiment's world: the tasks, the tools those tasks may call, how answers are scored, and any faults that should apply unless the command line overrides them. A task is one question, with an expected answer and the tools it is allowed to use.</p>
+
+<h2>Why this helps you</h2>
+<p>The built-in suites are enough to see the lab work. They are not your product. A suite file is how you describe the jobs your agent actually does, with tools that return the kinds of answers those jobs need, without waiting on the real network. Once that file exists, every command on this site accepts its path in place of the name <code>reliability</code>.</p>
+
+<h2>Try this</h2>
+<pre><code>relai suites
+relai run demo</code></pre>
+<p>The demo suite is the smaller of the two. Its weather tool always fails the first call, and only an agent that retries can finish that task. The reliability suite is a customer-support desk: lookup tools for customers, orders, shipping, refunds, stock, exchange rates, and weather, plus a calculator. It has 12 tasks, from one call up to five. It injects no faults until you pass <code>--timeout-rate</code> or <code>--error-rate</code>.</p>
+
+<h2>What you should see</h2>
+<pre><code>demo          3 tasks  Three small tasks for a first look: ...
+reliability  12 tasks  A customer-support desk backed by lookup tools. ...</code></pre>
+<p>One task from the reliability suite, shortened from the YAML, shows the shape. <code>{0}</code> means the output of the first call, and <code>{1}</code> the output of the second:</p>
+<pre><code>- id: latest_order_status
+  prompt: What is the status of the latest order placed by ravi@example.com?
+  expected: delivered
+  allowed_tools: [customer_lookup, order_history, order_status]
+  tags: [requires_tools, long-horizon]
+  max_steps: 12
+  guess: shipped
+  solution:
+    - {tool: customer_lookup, args: {email: ravi@example.com}}
+    - {tool: order_history, args: {customer: "{0}"}}
+    - {tool: order_status, args: {order: "{1}"}}</code></pre>
+
+<h2>How to read it</h2>
+<ul>
+  <li><strong>expected</strong> is what the scorer compares with the final answer. This suite uses normalized match.</li>
+  <li><strong>allowed_tools</strong> is the permit list. A call outside it is tool misuse.</li>
+  <li><strong>tags</strong> such as <code>requires_tools</code> tell the planning check that skipping tools is a failure. <code>planning</code> requires a plan step.</li>
+  <li><strong>max_steps</strong> is the horizon budget. Longer trajectories are flagged even when the answer is right.</li>
+  <li><strong>guess</strong> is what the guessing baseline answers, so the self-check knows that agent will be wrong.</li>
+  <li><strong>solution</strong> is the reference plan the offline baselines follow. Your agent does not have to follow it. It is there so the baselines have a known-good path to depart from.</li>
+  <li><strong>answer</strong> can stand in for a final answer when a task has no tool plan, such as a direct arithmetic question.</li>
+</ul>
+<p>Tools are lookup tables or a calculator. A lookup declares the argument name, a price, a latency, and a map of inputs to outputs. Keys ignore case and extra spaces. A missing key returns the tool's default, which is "no result" unless you change it. The calculator parses arithmetic with a small whitelist of operators. It does not call Python's <code>eval</code>.</p>
+<p>Writing a file of your own is the page <a href="your-own-suite.html">Your own suite</a>.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix"><code>solution</code> is not a script your agent is forced to run. It is metadata the baselines read. A live model never sees it unless you put it in the prompt yourself. And <code>guess</code> is not the expected answer. It is the wrong answer the guessing agent is supposed to give.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="your-own-suite.html">Your own suite</a> <a href="trajectories.html">Trajectories</a></p>

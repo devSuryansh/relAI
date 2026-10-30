@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your own suite · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html" aria-current="page">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Your agent</p>
+      
+      <h1>Your own suite</h1>
+      <h2>Definition</h2>
+<p class="def">Your own suite is a YAML or JSON file that lists the tasks you care about, the tools those tasks call, how an answer is judged, and the faults you want by default. <code>relai run path/to/suite.yaml</code> treats that file the same way it treats the name <code>reliability</code>.</p>
+
+<h2>Why this helps you</h2>
+<p>A good score on the customer-support desk does not mean your agent can do your job. The desk is a stand-in with known answers, so the lab can be tested. Your suite is how the same machinery scores the prompts, tools, and answers you actually ship. Because the tools are tables, you can run the suite in CI without the real services, and you can still inject timeouts into those tables.</p>
+
+<h2>Try this</h2>
+<p>Save this as <code>my-suite.yaml</code>. It is one lookup tool and one task. <code>normalized</code> accepts "Shipped" as well as "shipped".</p>
+<pre><code>name: my-suite
+scorer: normalized
+tools:
+  order_status:
+    arg: order
+    cost_usd: 0.001
+    latency_ms: 100
+    responses: {O-1: shipped}
+faults: {timeout_rate: 0.2}
+tasks:
+  - id: status
+    prompt: What is the status of order O-1?
+    expected: shipped
+    allowed_tools: [order_status]
+    tags: [requires_tools]
+    max_steps: 8
+    guess: processing
+    solution:
+      - {tool: order_status, args: {order: O-1}}</code></pre>
+<pre><code>relai run my-suite.yaml --agent naive --agent retry:1 --trials 5</code></pre>
+<p>The file's <code>timeout_rate</code> applies because the command does not pass <code>--timeout-rate</code>. Pass the flag when you want to override it.</p>
+
+<h2>What you should see</h2>
+<p>Seed 0, five trials of the one task:</p>
+<pre><code>variant  success  95% CI        pass^k  consistent  cost     latency  recovery  horizon
+-------  -------  ------------  ------  ----------  -------  -------  --------  -------
+retry:1  1.00     [1.00, 1.00]  1.00    1.00        $0.0012  300ms    1.00      4.6
+naive    0.80     [0.80, 0.80]  0.00    0.00        $0.0010  280ms    0.80      4.0
+
+failure modes (retry:1): none
+failure modes (naive): {'recovery': 1}
+
+retry:1 vs naive on 5 paired runs: retry:1 alone passed 1, naive alone passed 0; McNemar p = 1.0000 (not significant)</code></pre>
+
+<h2>How to read it</h2>
+<p>Naive passes four of the five trials. The fifth times out and is a recovery failure, so pass^k is 0: not every trial succeeded. retry:1 covers that one timeout. The interval for naive is [0.80, 0.80] because there is only one task to resample, so the bootstrap cannot move. A paired test on a single disagreement is not significant (p = 1). The same command with the same seed repeats these numbers. Add tasks before you trust a p-value.</p>
+<p>The fields you will reach for first:</p>
+<ul>
+  <li><strong>scorer.</strong> <code>exact</code>, <code>contains</code>, <code>normalized</code>, <code>numeric</code>, or <code>regex</code>. <code>--scorer</code> overrides the file. Numeric reads the first number in the answer. Regex uses <code>expected</code> as the pattern.</li>
+  <li><strong>tools.</strong> <code>kind: lookup</code> is the default. <code>kind: calculator</code> evaluates an <code>expression</code> argument. <code>arg</code> is the parameter name your agent must use. The wrong name is tool misuse, not a fault.</li>
+  <li><strong>responses.</strong> Input text to output text. Matching ignores case and extra spaces. An unknown input returns <code>default</code>, or "no result".</li>
+  <li><strong>faults.</strong> <code>timeout_rate</code>, <code>error_rate</code>, <code>fail_first_n</code>, and an optional <code>tools</code> list. Rates must add up to at most 1.</li>
+  <li><strong>solution</strong> and <strong>guess</strong> feed the baselines and the self-check. A chain may use <code>"{0}"</code>, <code>"{1}"</code>, and so on for earlier outputs. Your agent can ignore the solution and still be scored against <code>expected</code>.</li>
+</ul>
+<p>JSON works too, with the same keys, if you would rather generate the file. <code>load_suite</code> accepts either. Keep expected answers short if you are using exact or normalized match, or switch to <code>contains</code> when the agent wraps the answer in a sentence.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">A suite tool is not your production API. It is a table that stands in for one, so faults and prices are repeatable. When you want the real model against these tables, use the <a href="live-models.html">live model</a> adapter. When you want the real API, you still route that call through the recorder, and you accept that a live service will not follow the seeded schedule unless you inject the fault yourself before the call returns.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="plug-in-your-agent.html">Plug in your agent</a> <a href="tasks-and-suites.html">Tasks and suites, the built-in files</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

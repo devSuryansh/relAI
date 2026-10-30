@@ -167,7 +167,7 @@ Must be able to explain:
 - How to write a task in YAML, including `solution`, `guess`, and `max_steps`.
 - What each baseline agent does wrong on purpose.
 - How the self-check proves the classifier works.
-- What the 81 tests check.
+- What the test suite checks.
 - How to run the demo.
 - The SRS, the DFDs, and the Gantt chart.
 
@@ -663,7 +663,7 @@ and where we differ. Where they are stronger, the table says so.
 
 | Fact | Value |
 | --- | --- |
-| Code | 17 modules, about 3,300 lines; 81 tests in under 1 s; CI on Python 3.11 to 3.13 |
+| Code | 17 modules, about 3,300 lines; 88 tests in under 1 s; CI on Python 3.11 to 3.13 |
 | Speed | About 6,500 scored and classified runs per second |
 | Suite | 12 support-desk tasks needing 0 to 5 tool calls; 5 trials each = 60 runs per agent |
 | At 30% timeouts | naive 0.58 (pass^5 0.25); 1 retry 0.77 (0.33); 3 retries 1.00 (1.00) |
@@ -697,12 +697,13 @@ Every number comes from `python academic/results/make_results.py`.
 | Path | What |
 | --- | --- |
 | `src/relai/` | The package |
-| `tests/` | 81 tests |
+| `tests/` | 88 tests |
 | `examples/` | Runnable scripts, including a live LLM example and a custom agent |
+| `website/` | Walkthrough site. Open `index.html` in a browser. |
 | `docs/` | Architecture and failure taxonomy |
 | `academic/paper/` | Research paper source and PDF |
 | `academic/progress-review/` | Slides, slide builder, progress report |
 | `academic/diagrams/` | All diagrams, as TikZ source, PDF, and PNG |
 | `academic/results/` | Data and captured output behind every number |
 | `academic/snapshots/` | Code and terminal images |
-| `docs/` | Institute templates and forms. Local only, not tracked in git. |
+| `context/` | Institute templates and forms. Local only, not tracked in git. |

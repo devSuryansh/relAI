@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install and first run · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html" aria-current="page">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Start here</p>
+      <p class="tour"><span>Step 2 of 8</span><a href="how-a-run-works.html">How a run works</a></p>
+      <h1>Install and first run</h1>
+      <h2>Definition</h2>
+<p class="def">Installing relAI puts the <code>relai</code> command and the Python package on your machine. The package needs Python 3.11 or newer. Its runtime dependencies are Pydantic and PyYAML. The offline agents and the tests need no GPU, no network, and no API key.</p>
+
+<h2>Why this helps you</h2>
+<p>You can read this site without installing anything. The commands become yours once the package is installed in a virtual environment, because then the same commands on the later pages produce the same kind of table on your machine. A virtual environment keeps that install separate from the rest of your Python.</p>
+
+<h2>Try this</h2>
+<p>From the repository root:</p>
+<pre><code>python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+relai suites
+relai run demo</code></pre>
+<p>On Windows, activate with <code>.venv\Scripts\activate</code> instead of <code>source</code>. The <code>[dev]</code> extra adds pytest and Ruff, which you want if you will change the lab. Leave it off if you only want to run the command.</p>
+
+<h2>What you should see</h2>
+<p><code>relai suites</code> lists the two built-in task files:</p>
+<pre><code>demo          3 tasks  Three small tasks for a first look: direct arithmetic, one lookup, and a weather call whose first attempt always times out, so only an agent that retries can finish it.
+reliability  12 tasks  A customer-support desk backed by lookup tools. Tasks range from one tool call to five-call chains, so the effect of tool failures, retries, and step budgets grows with task length. No faults are injected by default; pass --timeout-rate or --error-rate to stress it.</code></pre>
+<p><code>relai run demo</code> then evaluates the default pair of agents, naive and retry, on the demo suite:</p>
+<pre><code>variant  success  95% CI        cost     latency  recovery  horizon
+-------  -------  ------------  -------  -------  --------  -------
+retry    1.00     [0.44, 1.00]  $0.0020  473ms    1.00      4.3
+naive    0.67     [0.21, 0.94]  $0.0013  373ms    0.67      3.3
+
+failure modes (retry): none
+failure modes (naive): {'recovery': 1}
+
+retry vs naive on 3 paired runs: retry alone passed 1, naive alone passed 0; McNemar p = 1.0000 (not significant)</code></pre>
+
+<h2>How to read it</h2>
+<p>The demo suite's weather tool is set to fail its first call. Naive calls once and answers "unknown", so that task fails and the label is recovery. Retry calls again and gets "sunny", so it passes all three tasks. The latency column is the time declared by the tools (search is 120 ms, weather is 300 ms), added up and averaged. It is not the wall clock of your Python process. Cost is the same idea in dollars: each tool call has a price in the suite file.</p>
+<p>The paired test is not significant because there is only one task where the two agents disagreed, and one disagreement is not enough. The page on <a href="comparing-agents.html">comparing agents</a> shows the same test with enough pairs to matter.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">If <code>relai</code> is not found, the virtual environment is not active, or the editable install did not run. <code>which relai</code> should point inside <code>.venv</code>. Also, <code>relai demo</code> and <code>relai run demo</code> are different commands. The first plays two scripts. The second runs the demo suite. Their tables are not meant to match.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="how-a-run-works.html">How a run works</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

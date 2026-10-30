@@ -366,6 +366,13 @@ meets the target.
 \caption{Three agents under 30\% tool timeouts, five trials per task}
 \end{figure}
 
+\section{Documentation Website}
+The repository includes a static walkthrough at \texttt{website/index.html}. It is aimed at a reader who wants to know what the laboratory does, how a run is assembled, and how to point it at an agent they already have. Eight numbered steps cover the project, installation, the shape of a run, seeded faults, failure modes, scores, plugging in an agent, and a glossary. Further pages cover task suites, trajectories, paired comparison, stress tests and sweeps, reports, the classifier self-check, the agent contract, live models, and writing a suite.
+
+Each page defines the term it introduces, says why that part helps someone evaluating their own agent, and shows a command together with output produced in this repository. Unfamiliar words are defined again in the glossary. The reader runs the commands in their own terminal. The site does not execute the laboratory for them, and it is not a dashboard over stored runs. That dashboard remains future work.
+
+The pages are ordinary HTML with one shared stylesheet. \texttt{python website/build.py} regenerates them from the fragments in \texttt{website/pages/}. \texttt{tests/test\_website.py} rebuilds the site and checks that every page, tour step, and internal link is present.
+
 \chapter{Preliminary Results}
 All results use offline reference agents, so the ground truth of each run is known.
 They validate the instrument; they do not rank LLMs. Unless noted, the suite has twelve

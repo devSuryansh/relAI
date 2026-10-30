@@ -1,0 +1,41 @@
+<h2>Definition</h2>
+<p class="def">A trajectory is the ordered list of steps in one run. A step is a plan, a tool call, an observation, an error, a recovery, or a final answer. Steps can carry latency, token counts, and cost. The final answer is the content of the last final step. If there is no final step, the run has no answer.</p>
+
+<h2>Why this helps you</h2>
+<p>Everything you see in a table was derived from these steps, and nothing else. If a number looks wrong, the trajectory is the place to look, not the agent. You can save the steps, diff them, and replay the score without spending another model call. That is also why a new failure mode has to be pinned with a trajectory fixture in the tests: the rule has to be visible in the steps.</p>
+
+<h2>Try this</h2>
+<p>Build a one-step trajectory in Python. This is the same shape the recorder builds for you.</p>
+<pre><code>from relai import Step, Trajectory
+
+traj = Trajectory(steps=[
+    Step.plan("look it up"),
+    Step.tool_call("order_status", {"order": "O-88121"}, ok=True),
+    Step.observation("shipped"),
+    Step.final("shipped"),
+])
+print(traj.final_output)
+print([step.kind.value for step in traj.steps])</code></pre>
+
+<h2>What you should see</h2>
+<pre><code>shipped
+['plan', 'tool_call', 'observation', 'final']</code></pre>
+
+<h2>How to read it</h2>
+<p>The six kinds, and who writes them:</p>
+<ul>
+  <li><strong>plan.</strong> You write it with <code>rec.plan("...")</code>. The planning check looks for it on tasks tagged <code>planning</code>.</li>
+  <li><strong>tool_call.</strong> <code>rec.call(name, args)</code> writes this, including whether the call was ok, the tool's price, and its latency.</li>
+  <li><strong>observation.</strong> The tool's output, written automatically after a call that was not an injected fault. A bad argument is also recorded here, because it is not an environment fault. The text is the error message.</li>
+  <li><strong>error.</strong> Written automatically when the fault policy returns a timeout or an outage. The content looks like <code>timeout: order_status timed out</code>.</li>
+  <li><strong>recovery.</strong> You write it with <code>rec.recovery("retry once")</code> when you decide to try again. The classifier uses this step to tell "gave up" from "tried and still failed".</li>
+  <li><strong>final.</strong> <code>rec.final("shipped")</code> ends the run and returns the trajectory. <code>rec.stop()</code> ends the run with no answer, which is a horizon failure.</li>
+</ul>
+<p>The harness adds two keys to <code>task.metadata</code> before it calls your agent: <code>relai.trial</code> and <code>relai.seed</code>. You rarely read them. The tool session reads them so the fault schedule stays aligned across agents. If your agent raises, the harness replaces the trajectory with a single error step and the experiment continues.</p>
+<p>The HTML report prints every step of every run. That view is described on <a href="reports.html">Reports</a>.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">An observation is not always good news. A call that fails because the argument name is wrong is still an observation, with <code>tool_ok</code> false, and it counts as tool misuse. An injected timeout is the path that writes an error step. Also, <code>final_output</code> is the last final step, not the last observation. If you forget <code>rec.final</code>, the scorer sees no answer.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="seeded-faults.html">Seeded faults, which write the error steps</a> <a href="reports.html">Reports, where the steps are printed</a></p>

@@ -1,0 +1,40 @@
+<h2>Definition</h2>
+<p class="def">A run is one agent attempting one task one time. The harness may repeat that attempt. Each attempt returns a <a href="glossary.html#trajectory">trajectory</a>: the ordered steps of the attempt. Scores, costs, and failure labels are read from those steps afterward. They do not call the agent again.</p>
+
+<h2>Why this helps you</h2>
+<p>Once you can see the pieces, the rest of the site is a map rather than a pile of commands. Your own agent only has to fit one seam, <code>name</code> plus <code>run(task)</code>. Everything else, the faults, the score, the comparison, stays outside the agent. That is what makes two agents comparable: they share the tasks, the trials, and the fault schedule, and they differ only in how they act.</p>
+
+<h2>Try this</h2>
+<p>This is the whole loop for the first task of the reliability suite, five times, with 30% of tool calls set to time out. Save it as a script, or paste it into <code>python</code> with the venv active.</p>
+<pre><code>from relai import FaultPolicy, Variant, load_suite, make_baseline, run_experiment
+
+suite = load_suite("reliability")
+env = suite.env(FaultPolicy(timeout_rate=0.3))
+experiment = run_experiment(
+    suite.tasks[:1],
+    [Variant("naive", make_baseline("naive", env))],
+    trials=5,
+)
+row = experiment.summary()[0]
+print(suite.tasks[0].id, f"{row['success_rate']:.2f}", f"{row['pass_hat_k']:.2f}")</code></pre>
+
+<h2>What you should see</h2>
+<pre><code>order_status 0.80 0.00</code></pre>
+<p>The task asks for the status of order O-88121. The answer in the suite is "shipped".</p>
+
+<h2>How to read it</h2>
+<p>Walk the call from the inside out.</p>
+<ol>
+  <li><code>load_suite</code> reads a YAML file: the tasks, the fake tools, the scorer, and any default faults. <code>"reliability"</code> is a built-in name. A path to your own file works the same way.</li>
+  <li><code>suite.env</code> builds a <a href="glossary.html#toolenv">ToolEnv</a>: those tools plus a <a href="seeded-faults.html">fault policy</a>. The policy here times out about 30% of calls. The schedule depends on the seed, the task, the trial, the tool, and the call number. It does not depend on which agent is running.</li>
+  <li><code>make_baseline("naive", env)</code> builds an offline agent that follows the reference plan in the suite and gives up on the first failed call. Your agent will take the same <code>env</code>.</li>
+  <li><code>run_experiment</code> is the harness. For each selected task and each trial it stamps the trial number and the seed onto the task, calls <code>agent.run</code>, times the call, then scores, measures, and classifies the trajectory. If the agent raises, that attempt becomes a failed run with an error step. The experiment continues.</li>
+  <li>The summary is one row per agent. <code>0.80</code> means four of the five trials passed. <code>0.00</code> is <a href="scores.html">pass^k</a> at k = 5: the chance that all five attempts succeed. One miss makes that chance zero. Success says the agent can do the task. pass^k says whether you can trust it to do the task every time.</li>
+</ol>
+<p>The pieces that only read trajectories, and never call the agent, are the scorer, the metrics, the failure classifier, the confidence interval, the paired test, and the sweep. That split is what makes a result reproducible: replay the trajectory and you get the same labels.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">A trial is not a task. The reliability suite has 12 tasks. <code>--trials 5</code> attempts each task five times, which is 60 runs for one agent. Also, <code>suite.tasks[:1]</code> keeps only the first task. Drop the slice when you want the whole suite, which is what <code>relai run reliability</code> does.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="seeded-faults.html">Seeded faults</a> <a href="trajectories.html">Trajectories, the record a run leaves behind</a></p>

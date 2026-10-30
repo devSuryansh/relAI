@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reports · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html" aria-current="page">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Features</p>
+      
+      <h1>Reports</h1>
+      <h2>Definition</h2>
+<p class="def">A report is a saved view of an experiment: the ranked table, the interval, the paired test, the failure counts, and the trajectory of every run. The terminal prints the short version. <code>--html</code> and <code>--markdown</code> write the long version. <code>--store</code> keeps it in SQLite so you can render it again later. <code>--json</code> prints the same summaries as JSON.</p>
+
+<h2>Why this helps you</h2>
+<p>The terminal is enough while you are trying a command. It is a bad place to leave the only copy. A saved run lets you reopen the steps of the one trial that failed, share the HTML file with someone who does not have the package installed, or list every experiment you have run this week. The HTML file is standalone. Opening it does not need a server.</p>
+
+<h2>Try this</h2>
+<pre><code>relai run demo --store runs.db --html report.html --markdown report.md
+relai report runs.db --list
+relai report runs.db --html report.html</code></pre>
+<p><code>--experiment 1</code> picks an id from the list. Omit it and the report command loads the latest experiment. Add <code>--json</code> to <code>relai run</code> when you want the numbers in a program. Status lines such as "saved" and "wrote" go to standard error, so the JSON on standard output stays clean.</p>
+
+<h2>What you should see</h2>
+<p>On standard error, then the same demo table as the install page, then one list row. The timestamp is the moment the experiment was saved. This one is from a run in this repository:</p>
+<pre><code>relai: saved experiment 1 to runs.db
+relai: wrote report.html
+
+  1  2026-10-30T22:08:34+00:00  run                      suite=demo  variants=2  runs=6</code></pre>
+<p>The HTML file opens in a browser. It repeats the ranked table and the paired sentence, draws a bar for each failure mode, and lists every run with its steps and the evidence strings.</p>
+
+<h2>How to read it</h2>
+<p>SQLite keeps five kinds of rows: the experiment, its variants, each run's scores, each step, and each failure label. The full trajectory is also stored as JSON on the run, which is what the report renders. Deleting a variant deletes its runs. The database file is ordinary SQLite. <code>runs.db</code> in the repository root is gitignored, along with <code>report.html</code>, so a local run does not become a commit by accident.</p>
+<p>JSON Lines is the other export, and it is a Python function rather than a CLI flag. <code>write_jsonl(results, path)</code> writes one run per line. <code>read_jsonl</code> reads them back. Use it when you want to stream runs into another tool.</p>
+<p>The store does not keep your agent's private memory. It keeps the trajectory the recorder wrote. If a step was never recorded, it cannot appear in the report.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">The HTML report and this documentation site are different files. <code>report.html</code> is one experiment. The site you are reading explains the tool. Also, <code>relai report</code> reads a database. It does not re-run the agents. If you change the agent and want new numbers, run <code>relai run</code> again.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="self-check.html">Self-check</a> <a href="trajectories.html">Trajectories, the steps the report prints</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

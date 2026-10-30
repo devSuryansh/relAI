@@ -2,7 +2,7 @@
 
     /path/to/venv-with-python-docx/bin/python academic/docs_build/build_report.py
 
-Base template: docs/RecipesDBMS.docx (header with the NIET logo, page border,
+Base template: context/RecipesDBMS.docx (header with the NIET logo, page border,
 roman front matter, arabic body). Times New Roman 12 body, 14 bold headings.
 """
 
@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DIAGRAMS = ROOT / "academic" / "diagrams"
 SNAPS = ROOT / "academic" / "snapshots"
 OUT_DIR = ROOT / "academic" / "report"
-TEMPLATE = ROOT / "docs" / "RecipesDBMS.docx"
+TEMPLATE = ROOT / "context" / "RecipesDBMS.docx"
 REPO_URL = "https://github.com/devSuryansh/relAI"
 
 STYLE = Style(body=12, line=1.15, after=6, h1=14, h2=12, h3=12, caption=11, table=10.5)
@@ -266,6 +266,7 @@ def chapter_introduction(b: Builder) -> None:
         "Statistics (Wilson and bootstrap intervals, exact McNemar test) and optimization (grid sweep, Pareto front, recommendation).",
         "YAML task suites, reference agents, a classifier self-check, SQLite and JSON Lines storage, HTML and Markdown reports, and a command-line interface.",
         "An adapter for live LLM agents through OpenAI-compatible APIs.",
+        "A static walkthrough website that explains each feature, with definitions and worked commands.",
     ])
     b.paragraph(
         "A hosted monitoring service, a graphical dashboard, and model training are outside the "
@@ -449,6 +450,16 @@ def chapter_design(b: Builder) -> None:
         "ranking, Pareto marks, failure-mode bars, and every run with its steps and evidence "
         "(Figs. 4.3 and 4.4)."
     )
+    b.paragraph(
+        "A separate static website, opened at `website/index.html`, documents the laboratory for "
+        "a new user. Eight numbered steps introduce the project, installation, the shape of a "
+        "run, seeded faults, failure modes, scores, plugging in an agent, and a glossary. "
+        "Further pages cover suites, trajectories, comparison, stress and sweeps, reports, the "
+        "classifier self-check, the agent contract, live models, and writing a suite. Each page "
+        "defines the term it introduces and shows a command with output produced by this "
+        "repository. `python website/build.py` regenerates the pages from `website/pages/`. "
+        "The site explains the tool. A dashboard for browsing stored runs remains future work."
+    )
     b.table(
         [
             ("Command", "Purpose"),
@@ -597,6 +608,15 @@ def chapter_design(b: Builder) -> None:
         "step; transport errors are recorded as error steps, and running out of turns produces a "
         "horizon failure."
     )
+    b.subsection("Walkthrough website")
+    b.paragraph(
+        "The repository also contains a beginner-facing website under `website/`. Each topic is "
+        "one HTML fragment. A small builder wraps every fragment in the same sidebar, stylesheet, "
+        "and, for the eight-step first visit, a tour line. The published pages are committed so "
+        "they open in a browser without a build step. A test rebuilds them and fails if a page, "
+        "a tour step, or an internal link is missing. The commands and sample outputs on the "
+        "pages were produced by running this repository."
+    )
 
 
 TEST_CASES = [
@@ -638,6 +658,7 @@ def chapter_testing(b: Builder) -> None:
         "**System testing.** Every command-line command is executed with its options, and its terminal, JSON, HTML, Markdown, and database outputs are checked.",
         "**Adapter testing.** The LLM adapter is tested with a fake transport that returns scripted model responses, so the tests never need a network or an API key.",
         "**Instrument validation.** Experiments check the system against known answers: measured success against the closed-form effect of faults, and diagnosed root causes against planted defects (Section 5.3).",
+        "**Walkthrough website.** `tests/test_website.py` rebuilds every documentation page and checks the sidebar, the eight-step tour, the shared teaching sections, and that every internal link resolves.",
     ])
     b.paragraph(
         "During development the self-check exposed a real defect: the first recovery rule judged "
@@ -823,7 +844,8 @@ def appendix(b: Builder) -> None:
         "Install with `python -m venv .venv`, activate it, and run `pip install -e \".[dev]\"`. "
         "Then `pytest -q` runs the tests and `relai run reliability --agent naive --agent "
         "retry:3 --trials 5 --timeout-rate 0.3` reproduces Table 5.3. All result files are "
-        "regenerated with `python academic/results/make_results.py`."
+        "regenerated with `python academic/results/make_results.py`. The walkthrough website "
+        "is `website/index.html`; regenerate it with `python website/build.py`."
     )
     b.paragraph("**C. Division of Work**", align="left")
     b.table(

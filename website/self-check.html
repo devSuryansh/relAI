@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self-check · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html" aria-current="page">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Features</p>
+      
+      <h1>Self-check</h1>
+      <h2>Definition</h2>
+<p class="def">The self-check runs agents that were built with one known defect and asks whether the failure classifier names that defect. If it does, the label means what the documentation says. If it does not, the label is not ready to trust. Agreement is the share of runs where a root cause was reported and it matched the planted defect.</p>
+
+<h2>Why this helps you</h2>
+<p>A taxonomy can sound precise and still be wrong. Before you treat "recovery" as a reason to change your agent, you want evidence that the word "recovery" is attached to runs that really did fail to recover. The planted agents are that evidence. They also show the honest case: a defect that never triggers is counted as "none", not as a success of the classifier.</p>
+
+<h2>Try this</h2>
+<pre><code>relai selfcheck --trials 5</code></pre>
+<p>The default suite is reliability, and the default timeout rate for this command is 0.3 when you do not pass one. <code>--trials</code> defaults to 3. Five trials match the other tables on this site.</p>
+
+<h2>What you should see</h2>
+<pre><code>diagnosed root cause per agent, reliability suite, timeout rate 0.3
+agent     planted      planning  tool_misuse  context  recovery  horizon  unclassified  none  agreement
+--------  -----------  --------  -----------  -------  --------  -------  ------------  ----  ---------
+naive     recovery     0         0            0        25        0        0             35    1.00
+retry     (control)    0         0            0        1         11       0             48    0.80
+guessing  planning     55        0            0        0         0        0             5     1.00
+looping   context      0         0            55       0         0        0             5     1.00
+careless  tool_misuse  0         60           0        0         0        0             0     1.00
+
+precision by mode: context 1.00, planning 1.00, recovery 1.00, tool_misuse 1.00</code></pre>
+
+<h2>How to read it</h2>
+<p>Each baseline follows the reference plan in the suite, then does one wrong thing.</p>
+<ul>
+  <li><strong>naive</strong> never retries. Where a timeout appears, the root cause is recovery, 25 times. The other 35 runs met no timeout, so the defect never surfaced. Those are "none", and they are not counted against the classifier. Agreement on the runs that did get a label is 1.00.</li>
+  <li><strong>retry</strong> is the control. It has no planted defect. The 11 horizon labels are real step-budget overruns caused by its retries. The one recovery label is a run that still failed. Agreement 0.80 is not a broken classifier. The control is not supposed to match a planted mode.</li>
+  <li><strong>guessing</strong> answers from the <code>guess</code> field and never calls a tool. That is a planning failure, 55 times. The mental-math task expects 42, and the guess is 42, so those five runs pass and are counted as none.</li>
+  <li><strong>looping</strong> retries faults, then repeats each successful call and ignores what it returned. That repeat after an observation is a context failure, 55 times.</li>
+  <li><strong>careless</strong> first calls a tool named <code>shell</code> that the task never allowed. Every run is tool misuse, 60 out of 60.</li>
+</ul>
+<p>Precision by mode is 1.00 for the four planted modes: when the classifier said planning, context, recovery, or tool misuse as a root cause on these agents, that is the defect that had been planted. Horizon is not in that precision line because no agent is planted to fail only by running too long. The control produces horizon labels as a side effect, and they are reported in its row.</p>
+<p>A new failure mode is accepted in this project only with a trajectory fixture that shows when the rule fires and when it must stay silent. Unmatched failures stay unclassified. That is the same discipline the self-check is enforcing.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">"none" is not "unclassified". Unclassified means the run failed and no rule explained it. "none" means no root cause was reported, usually because the run passed and the planted defect never came up. Also, agreement ignores those silent runs. An agreement of 1.00 with a large "none" column means the classifier was right when it spoke, and the fault often did not show up. Raise the timeout rate if you want the defect to surface more often.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="failure-modes.html">Failure modes, the rules being checked</a> <a href="agent-contract.html">The agent contract</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

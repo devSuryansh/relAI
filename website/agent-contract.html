@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The agent contract · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html" aria-current="page">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Your agent</p>
+      
+      <h1>The agent contract</h1>
+      <h2>Definition</h2>
+<p class="def">The agent contract is two things: a string <code>name</code>, and <code>run(self, task) -&gt; Trajectory</code>. Anything with those can be evaluated. New model backends, orchestrators, and memory systems adapt to that seam. They do not change the harness. Metrics and failure analysis read trajectories. They do not call the agent.</p>
+
+<h2>Why this helps you</h2>
+<p>You do not port your agent into a framework. You wrap the part that already calls tools. The wrapper's only job is to write steps and to let the lab's environment perform the tool calls. After that, trials, faults, scores, and reports apply without further integration. If you later swap the model, the wrapper stays, and old trajectories remain comparable.</p>
+
+<h2>Try this</h2>
+<p>Three shapes that already satisfy the contract. The first is the one you will write. The other two are included for tests and for tiny demos.</p>
+<pre><code>from relai import FunctionAgent, ScriptedAgent, Step, Task, Trajectory
+
+def run(task: Task) -&gt; Trajectory:
+    return Trajectory(steps=[Step.final("42")])
+
+wrapped = FunctionAgent("fn", run)
+
+scripted = ScriptedAgent(
+    "scripted",
+    {"known": Trajectory(steps=[Step.final("yes")])},
+    default=Trajectory(steps=[Step.final("no")]),
+)</code></pre>
+<p><code>FunctionAgent</code> adapts a plain function. <code>ScriptedAgent</code> returns a canned trajectory for each task id, and the default when the id is missing. Neither of them talks to tools. A useful agent takes a ToolEnv in its constructor and calls <code>env.recorder(task)</code>, as on <a href="plug-in-your-agent.html">Plug in your agent</a>.</p>
+
+<h2>What you should see</h2>
+<p>Nothing is printed. The two objects exist, and each has a <code>name</code> and a <code>run</code> method. Passing either one to <code>run_experiment</code> inside a <code>Variant</code> is enough for the harness to call it. A crash inside <code>run</code> does not crash the experiment: the harness records a single error step, marks the run failed, and continues with the next trial.</p>
+
+<h2>How to read it</h2>
+<p>What the harness promises you:</p>
+<ul>
+  <li>It calls <code>run</code> once per task per trial. The task is a copy. <code>metadata["relai.trial"]</code> and <code>metadata["relai.seed"]</code> are set.</li>
+  <li>It does not look at your constructor. Factories such as <code>make_agent(env)</code> are a CLI convenience, not part of the protocol.</li>
+  <li>It times the call from the outside. Tool latency you care about still has to be on the steps, which <code>rec.call</code> does for you.</li>
+  <li>It will not retry your agent for you. Retries are your policy, recorded as recovery steps and further calls.</li>
+</ul>
+<p>What you promise the harness:</p>
+<ul>
+  <li>Return a trajectory, or raise. Do not return a bare string.</li>
+  <li>Put the answer in a final step if you have one.</li>
+  <li>Send tool calls through the recorder that belongs to this task. A recorder from a previous task still carries the previous fault counters.</li>
+</ul>
+<p>The CLI spec for a factory is <code>package.module:function</code>, or a baseline name such as <code>naive</code>, <code>retry:3</code>, <code>retry:max_retries=3,backoff_ms=10</code>, <code>guessing</code>, <code>looping</code>, or <code>looping:repeats=2</code>. <code>careless</code> takes no extra parameter. An unknown name exits with code 2 and a one-line error on standard error.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">The protocol is not a base class you must subclass. <code>PolicyAgent</code> is the base of the built-in baselines, and your agent can ignore it. Subclassing it is useful only when you want the reference plan and a place to change one behavior, which is how the planted-defect agents are written.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="plug-in-your-agent.html">Plug in your agent</a> <a href="live-models.html">Live models</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

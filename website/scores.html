@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scores · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html" aria-current="page">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Features</p>
+      <p class="tour"><span>Step 6 of 8</span><a href="plug-in-your-agent.html">Plug in your agent</a></p>
+      <h1>Scores</h1>
+      <h2>Definition</h2>
+<p class="def">A score says whether the final answer passed. The metrics around it say what the run cost. pass@k and pass^k turn repeated trials into a reliability number: the chance that at least one of k attempts succeeds, or the chance that all k of them do. The table's <code>pass^k</code> column is the second one, with k equal to the number of trials.</p>
+
+<h2>Why this helps you</h2>
+<p>Success alone flatters an agent that gets lucky. If an agent passes 4 out of 5 tries, success is 0.80, which looks strong. pass^5 for that task is 0, because a customer who runs the agent five times will not get five good answers. If you are deciding whether to trust an agent with a tool that sometimes times out, pass^k is the number that matches that decision. Cost and latency tell you what the extra retries spent to buy it.</p>
+
+<h2>Try this</h2>
+<p>Same command as the faults page. This time read success, pass^k, consistent, cost, latency, recovery, and horizon.</p>
+<pre><code>relai run reliability --agent naive --agent retry:1 --agent retry:3 --trials 5 --timeout-rate 0.3</code></pre>
+
+<h2>What you should see</h2>
+<pre><code>variant  success  95% CI        pass^k  consistent  cost     latency  recovery  horizon
+-------  -------  ------------  ------  ----------  -------  -------  --------  -------
+retry:3  1.00     [1.00, 1.00]  1.00    1.00        $0.0030  1116ms   1.00      8.8
+retry:1  0.77     [0.67, 0.88]  0.33    0.33        $0.0025  947ms    0.79      7.2
+naive    0.58     [0.38, 0.77]  0.25    0.33        $0.0016  543ms    0.58      5.0</code></pre>
+
+<h2>How to read it</h2>
+<p>Each cell is an average over the 60 runs (12 tasks, 5 trials), except pass^k and consistent, which are computed per task and then averaged.</p>
+<ul>
+  <li><strong>success.</strong> The share of runs whose final answer passed the scorer. The reliability suite uses normalized match: lowercase, punctuation removed, spaces collapsed, then an exact compare. Other scorers are exact, contains, numeric, and regex. Numeric gives partial credit. The others are pass or fail.</li>
+  <li><strong>95% CI.</strong> An interval for the success rate. With one trial per task it is a Wilson interval. With several trials the runs of one task move together, so the lab resamples whole tasks (a cluster bootstrap, seed 0, 2000 draws) instead of pretending the 60 runs are independent.</li>
+  <li><strong>pass^k.</strong> For a task with c successes in n trials, pass^k is C(c, k) / C(n, k). The table uses k = n = 5, so the task contributes 1 only when all five trials passed, and 0 otherwise. The column is the mean of that value across tasks. Naive's 0.25 means about a quarter of the tasks were clean every time.</li>
+  <li><strong>pass@k</strong> is the other estimator, C being the binomial coefficient: 1 - C(n - c, k) / C(n, k). It is the chance that at least one of k sampled trials succeeds. The default table does not print it. It is on each report as <code>pass_at_k</code> if you use <code>--json</code>.</li>
+  <li><strong>consistent.</strong> The share of tasks whose trials all agree: all pass, or all fail. An agent that flips between pass and fail on the same task is not consistent, even if its average success looks fine.</li>
+  <li><strong>cost.</strong> Mean dollars recorded on steps. Suite tools declare a price per call. Timeouts are still billed.</li>
+  <li><strong>latency.</strong> Mean of the declared step latencies, in milliseconds. It is the suite's model of tool time, not the clock on your laptop. Retries add calls, so they add latency.</li>
+  <li><strong>recovery.</strong> Of the error episodes in a run, the share after which a working path came back. A run with no errors scores 1. The column averages that.</li>
+  <li><strong>horizon.</strong> Mean number of steps in the trajectory. Longer means more plans, calls, retries, and the final answer.</li>
+</ul>
+<p>Correctness sits beside success. For exact, contains, normalized, and regex it is 1 on a pass and 0 on a fail. For numeric it is 1 inside the tolerance, and otherwise one minus the relative error, floored at zero. A wrong but close number can fail and still show partial credit.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">pass@k and pass^k answer different questions. pass@k asks whether the agent is capable of succeeding if you let it try k times and keep a success. pass^k asks whether every one of those tries succeeds. A high success with a low pass^k is an agent you cannot yet trust. Also, the latency column is not wall-clock time. Wall clock is measured, and it is in the JSON summary as <code>mean_latency_ms</code>, but the table shows declared step time so simulated runs stay comparable.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="plug-in-your-agent.html">Plug in your agent</a> <a href="comparing-agents.html">Comparing agents, including the interval and the paired test</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

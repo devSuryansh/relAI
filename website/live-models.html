@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live models · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html" aria-current="page">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Your agent</p>
+      
+      <h1>Live models</h1>
+      <h2>Definition</h2>
+<p class="def">A live model agent is the same contract backed by an OpenAI-compatible chat endpoint. <code>OpenAICompatAgent</code> asks the model, runs the tool calls it requests through the suite's ToolEnv, and repeats until the model answers or the turn budget runs out. Tokens, cost, and latency are recorded on the steps. Hosted APIs and a local server such as Ollama both fit, because both speak that HTTP shape.</p>
+
+<h2>Why this helps you</h2>
+<p>The offline baselines tell you the lab works. They do not tell you whether your model handles a timeout. This adapter puts that model in the same table as <code>retry:2</code>, with the same faults and the same scorer. You can see whether the model retries when the system prompt asks it to, whether it loops, and what the tokens cost. You do not write a second evaluation path for "real" agents.</p>
+
+<h2>Try this</h2>
+<p>The example script loads the reliability suite at a timeout rate of 0.2, runs your model for three trials, and writes <code>live_report.html</code> beside a retry:2 baseline.</p>
+<pre><code>OPENAI_API_KEY=sk-... RELAI_MODEL=gpt-4o-mini python examples/live_llm_agent.py</code></pre>
+<p>A local model, with no hosted key:</p>
+<pre><code>OPENAI_BASE_URL=http://localhost:11434/v1 RELAI_MODEL=qwen2.5:7b python examples/live_llm_agent.py</code></pre>
+<p>Optional prices, in dollars per thousand tokens, are <code>RELAI_USD_PER_1K_PROMPT</code> and <code>RELAI_USD_PER_1K_COMPLETION</code>. Leave them at 0 if you only want token counts. The agent's constructor also takes <code>max_turns</code> (default 8), <code>temperature</code> (default 0), and a <code>system_prompt</code>. The default prompt tells the model to use tools when it needs data, to retry a tool that times out, and to finish with the answer only.</p>
+
+<h2>What you should see</h2>
+<p>This page does not paste a live score. The numbers depend on the model, the key, and the day. What the script prints is one summary line per variant, the model and <code>retry:2</code>, each with a success rate and a failure-count dict. It then writes <code>live_report.html</code>, which is the same report format as any other experiment. Open that file to see the model's steps: the tool it called, the timeout if one was injected, whether it called the tool again, and the final answer.</p>
+<p>If you have no endpoint, skip the command. The rest of the site is runnable without one. Come back when you want the model in the table.</p>
+
+<h2>How to read it</h2>
+<p>The adapter builds a recorder for the task and sends the tool schemas from the environment, restricted to the task's allowed tools when that list is set. Each model turn becomes steps. A transport error is an error step, not a crashed experiment. If the model is still calling tools when <code>max_turns</code> is spent, the run stops short of a normal answer and is classified as a horizon failure.</p>
+<p>Faults apply because the tools are called through the ToolEnv, not because the adapter has its own fault logic. The baseline in the same <code>run_experiment</code> call shares that environment, so it meets the same schedule when it makes the same calls. A model that calls a different tool, or calls it a different number of times, can meet a different draw. The schedule is per tool and per call number. It is not "the nth HTTP request".</p>
+<p>Compare the model with the baseline on success, pass^k, and the failure line, the same way the faults page compares naive with retry. A model that scores like naive is giving up after the first timeout. A model that scores like retry and also shows context failures is retrying and then repeating work it already finished.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">The adapter does not grade the model's reasoning. The scorer sees the final answer only. A long, correct explanation can fail an exact or normalized scorer if the expected text is the single word <code>shipped</code>. The default system prompt asks for the answer alone for that reason. Also, a local server must actually be running at <code>OPENAI_BASE_URL</code>. A refused connection is recorded as an error step on the runs that needed the model.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="your-own-suite.html">Your own suite</a> <a href="plug-in-your-agent.html">Plug in your agent</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

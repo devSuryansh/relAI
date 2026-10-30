@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glossary · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html" aria-current="page">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Glossary</p>
+      <p class="tour"><span>Step 8 of 8</span><span>End of the tour</span></p>
+      <h1>Glossary</h1>
+      <h2>Definition</h2>
+<p class="def">The glossary is the same vocabulary as the rest of the site, in one list. Each feature page defines a word where it first matters. This page is where you look it up again a week later.</p>
+
+<h2>Why this helps you</h2>
+<p>The lab uses a handful of words in a precise way. "Trial", "success", and "recovery" all sound like ordinary English, and in this project they are not. Using the project meaning keeps a comparison fair. If a word in a table is unfamiliar, it is here, and the page that uses it is linked from the sidebar.</p>
+
+<h2>Try this</h2>
+<p>Pick one row in a results table you do not yet trust, and find that word below. Then open the feature page linked from the definition and run the command printed there.</p>
+
+<h2>What you should see</h2>
+<p>A short definition, then the page or the command where the word is used. The list is alphabetical after the two words the whole lab is built on, agent and trajectory.</p>
+
+<h2>How to read it</h2>
+<dl class="gloss">
+  <dt id="agent">Agent</dt>
+  <dd>Anything with a <code>name</code> and <code>run(task)</code> that returns a trajectory. Models, scripts, and hand-written policies all qualify. See <a href="agent-contract.html">the agent contract</a>.</dd>
+  <dt id="baseline">Baseline</dt>
+  <dd>An offline reference agent shipped with the lab: naive, retry, guessing, looping, or careless. Useful as the other row in a comparison when you do not want to call a model.</dd>
+  <dt id="bootstrap">Bootstrap</dt>
+  <dd>A way to build a confidence interval by resampling. With several trials, relAI resamples whole tasks, because the trials of one task are not independent.</dd>
+  <dt id="call-number">Call number</dt>
+  <dd>How many times this run has already called this tool, including the current call. The first call is 1. The counter is per tool, not per run. Faults are keyed by it.</dd>
+  <dt id="confidence-interval">Confidence interval</dt>
+  <dd>A range that expresses how sure the success rate is. The table prints a 95% interval. A wide interval means you do not have enough tasks or trials to be precise yet.</dd>
+  <dt id="consistency">Consistency</dt>
+  <dd>The share of tasks whose trials all agree, either all passing or all failing. Printed as <code>consistent</code>.</dd>
+  <dt id="context">Context failure</dt>
+  <dd>The agent repeated a tool call with the same arguments after it had already received an observation. It ignored new information.</dd>
+  <dt id="correctness">Correctness</dt>
+  <dd>A number from 0 to 1 beside the pass/fail score. Most scorers use 0 or 1. The numeric scorer gives partial credit.</dd>
+  <dt id="fault">Fault</dt>
+  <dd>A timeout, an outage, or a fail-first-N miss, injected into a tool call. The schedule ignores which agent is running. See <a href="seeded-faults.html">seeded faults</a>.</dd>
+  <dt id="failure-mode">Failure mode</dt>
+  <dd>One of planning, tool misuse, context, recovery, and horizon. A run may have several. See <a href="failure-modes.html">failure modes</a>.</dd>
+  <dt id="horizon">Horizon</dt>
+  <dd>The length of a run, in steps. A horizon failure means the run exceeded <code>max_steps</code> or stopped without a final answer. A correct answer can still be flagged.</dd>
+  <dt id="mcnemar">McNemar test</dt>
+  <dd>A paired significance test. It uses only the runs where one agent passed and the other failed. The table prints the exact two-sided p-value. Below 0.05 the lab calls the difference significant.</dd>
+  <dt id="pareto">Pareto front</dt>
+  <dd>The settings that are not beaten on every objective at once. Here the objectives are higher success, lower cost, and lower latency. A setting on the front is one you might actually choose.</dd>
+  <dt id="pass-at-k">pass@k</dt>
+  <dd>The chance that at least one of k sampled trials succeeds. Estimated as 1 - C(n - c, k) / C(n, k) from c successes in n trials, then averaged over tasks. This measures capability.</dd>
+  <dt id="pass-hat-k">pass^k</dt>
+  <dd>The chance that all k sampled trials succeed. Estimated as C(c, k) / C(n, k). The table's <code>pass^k</code> column uses k equal to the number of trials. This measures dependability. See <a href="scores.html">scores</a>.</dd>
+  <dt id="planted-defect">Planted defect</dt>
+  <dd>A baseline built so that one failure mode is the known correct diagnosis. The self-check uses these to see whether the classifier agrees.</dd>
+  <dt id="planning">Planning failure</dt>
+  <dd>A wrong answer with no environment error, often because required tools were never called.</dd>
+  <dt id="recovery">Recovery</dt>
+  <dd>Getting back to a working path after an error step: a later successful call of the tool that failed, or a correct final answer. The recovery column is the share of error episodes that were restored.</dd>
+  <dt id="recorder">Recorder</dt>
+  <dd>The object an agent uses to write steps and to call tools. <code>env.recorder(task)</code> returns one. Calls made any other way are invisible to the lab.</dd>
+  <dt id="root-cause">Root cause</dt>
+  <dd>The failure mode with the earliest evidence in the trajectory. Not the only mode on the run.</dd>
+  <dt id="run">Run</dt>
+  <dd>One agent, one task, one trial. A suite with 12 tasks and 5 trials is 60 runs per agent.</dd>
+  <dt id="scorer">Scorer</dt>
+  <dd>The function that compares the final answer with the task's expected text. One of exact, contains, normalized, numeric, or regex.</dd>
+  <dt id="seed">Seed</dt>
+  <dd>The integer that pins the fault schedule. The same seed, task, trial, tool, and call number always produce the same fault. <code>--seed</code> changes it. The default is 0.</dd>
+  <dt id="step">Step</dt>
+  <dd>One entry in a trajectory. The kind is plan, tool_call, observation, error, recovery, or final. A step can carry latency, tokens, and cost.</dd>
+  <dt id="stress-test">Stress test</dt>
+  <dd>The same agents measured at several timeout rates, so you can see how fast success falls. The command is <code>relai stress</code>.</dd>
+  <dt id="success">Success</dt>
+  <dd>The share of runs the scorer marked as passed. It is not the same as pass^k, and it is not the same as "no failure labels": a correct answer can still carry a horizon label.</dd>
+  <dt id="suite">Suite</dt>
+  <dd>A YAML or JSON file of tasks, tools, a scorer, and optional default faults. <code>demo</code> and <code>reliability</code> are built in.</dd>
+  <dt id="sweep">Sweep</dt>
+  <dd>A grid of agent settings, each run on the same tasks and faults. The lab keeps the Pareto front and recommends the cheapest setting that meets a success target.</dd>
+  <dt id="task">Task</dt>
+  <dd>One question the agent must answer: an id, a prompt, an expected answer, the tools it is allowed to call, tags, and an optional step budget.</dd>
+  <dt id="tool-misuse">Tool misuse</dt>
+  <dd>A call to a tool the task does not allow, or a failed call that is not an environment fault. Unknown tools and bad argument names count.</dd>
+  <dt id="toolenv">ToolEnv</dt>
+  <dd>The tools plus the fault policy for a suite. Agents receive one and call tools through its recorder.</dd>
+  <dt id="trajectory">Trajectory</dt>
+  <dd>The ordered list of steps in one run. Metrics and failure analysis read this list and do not call the agent again. See <a href="trajectories.html">trajectories</a>.</dd>
+  <dt id="trial">Trial</dt>
+  <dd>One attempt at a task. Trial numbers start at 0. Different trials see different faults, because the trial is part of the schedule.</dd>
+  <dt id="unclassified">Unclassified</dt>
+  <dd>A failed run that matched no failure mode. Left unlabeled on purpose.</dd>
+  <dt id="variant">Variant</dt>
+  <dd>One named agent in an experiment, optionally with a setting such as <code>retry:3</code>. Variants share the task list, the trial count, and the seed.</dd>
+  <dt id="wilson">Wilson interval</dt>
+  <dd>The confidence interval used when each task is attempted once. It stays sensible when the success rate is 0 or 1, where a naive interval would not.</dd>
+</dl>
+
+<h2>Easy to mix up</h2>
+<p class="mix">pass@k and pass^k are easy to swap because the names are close. The caret version, pass^k, is the strict one: every attempt must succeed. The @ version keeps a success if any attempt in the sample works. The printed column is pass^k.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="your-own-suite.html">Your own suite, if the built-in tasks are not your tasks</a> <a href="index.html">Back to the start</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

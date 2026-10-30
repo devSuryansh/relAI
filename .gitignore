@@ -15,6 +15,7 @@ htmlcov/
 *.jsonl
 .idea/
 .vscode/
+.superpowers/
 
 # Experiment outputs
 *.db
@@ -28,7 +29,9 @@ htmlcov/
 *.blg
 *.fdb_latexmk
 *.fls
+*.lof
 *.log
+*.lot
 *.out
 *.synctex.gz
 *.toc

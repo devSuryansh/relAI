@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Failure modes · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html" aria-current="page">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Features</p>
+      <p class="tour"><span>Step 5 of 8</span><a href="scores.html">Scores</a></p>
+      <h1>Failure modes</h1>
+      <h2>Definition</h2>
+<p class="def">A failure mode is a label the classifier puts on a trajectory, with a sentence of evidence. There are five: planning, tool misuse, context, recovery, and horizon. A run can carry more than one. The root cause is whichever label has the earliest evidence. A failed run that matches none of the five stays unclassified. The classifier does not guess.</p>
+
+<h2>Why this helps you</h2>
+<p>A failed score tells you the answer was wrong. It does not tell you what to change. These labels are the change list. Planning means the agent never did the work. Tool misuse means it used a tool badly. Context means it ignored something it had just been told. Recovery means a tool failed and the run never got back on a working path. Horizon means it ran too long or never answered. If you are tuning your own agent, you want to know which of those you are looking at before you add retries, prompts, or tools.</p>
+
+<h2>Try this</h2>
+<p>The same run as the faults page. Read the <code>failure modes</code> lines under the table.</p>
+<pre><code>relai run reliability --agent naive --agent retry:1 --agent retry:3 --trials 5 --timeout-rate 0.3</code></pre>
+
+<h2>What you should see</h2>
+<pre><code>failure modes (retry:3): {'horizon': 12}
+failure modes (retry:1): {'recovery': 14, 'horizon': 2}
+failure modes (naive): {'recovery': 25}</code></pre>
+
+<h2>How to read it</h2>
+<p>The rules, in the order the classifier checks them. A label is added only when its evidence is present. Successful runs skip the planning check.</p>
+<table>
+  <thead><tr><th>Mode</th><th>When it fires</th><th>A run it must not catch</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>planning</td>
+      <td>The answer is wrong, and the run has no tool error. Typical evidence: a task that requires tools was never given a tool call, a task tagged <code>planning</code> has no plan step, or the answer is wrong with no tools and no errors.</td>
+      <td>A wrong answer that followed a timeout. That is recovery, or tool misuse, not a missing plan.</td>
+    </tr>
+    <tr>
+      <td>tool misuse</td>
+      <td>A call names a tool outside <code>allowed_tools</code>, or a call fails and the next step is not an environment error. Unknown tools and bad arguments land here, because they are the agent's mistake.</td>
+      <td>A timeout. The recorder writes an error step after the call, so the failure belongs to the environment.</td>
+    </tr>
+    <tr>
+      <td>context</td>
+      <td>The agent calls the same tool with the same arguments again after it already received an observation. It ignored new context.</td>
+      <td>A retry of a call that failed. A failed call is followed by an error, not by an observation, so a retry is not a context failure.</td>
+    </tr>
+    <tr>
+      <td>recovery</td>
+      <td>An error step never gets a working path back. A path is restored by a later successful call of the tool that failed, or by a correct final answer. If the agent does not even record a recovery step, the evidence says so.</td>
+      <td>A chain of retries that ends in success. Every error in that chain counts as recovered, and the mode stays silent.</td>
+    </tr>
+    <tr>
+      <td>horizon</td>
+      <td>The trajectory has more steps than <code>max_steps</code>, or it ends with no final answer. This one can fire on a run whose answer was right.</td>
+      <td>A long run that still fits under the task's step budget and does finish.</td>
+    </tr>
+  </tbody>
+</table>
+<p>Counts are across runs, and one run can add to more than one count. Naive's 25 recovery labels are the timeouts it did not retry, across 12 tasks and 5 trials (60 runs). retry:3 recovered from those timeouts, so its recovery count is zero, but 12 of its runs crossed a step budget. The answers were still right, which is why success is 1.00 and horizon is not. pass^k stays 1.00 there because the score, not the horizon label, decides a pass.</p>
+<p>Unclassified is a failed run the rules do not explain. The lab leaves it unlabeled on purpose. Forcing it into the nearest mode would make the classifier look more certain than it is. The <a href="self-check.html">self-check</a> page shows that the labels above really do match agents built to fail in one known way.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">Root cause is not "the only thing that went wrong". It is the earliest label. A run can misuse a tool and then also fail to recover. The table of failure modes counts every label. Root cause, used by the self-check, keeps one. Also, a horizon flag on a correct answer is not a wrong answer. Read the success column and the horizon count together.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="scores.html">Scores</a> <a href="self-check.html">Self-check, for whether these labels are trustworthy</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>

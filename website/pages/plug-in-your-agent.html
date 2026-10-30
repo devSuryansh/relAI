@@ -1,0 +1,69 @@
+<h2>Definition</h2>
+<p class="def">An agent, in relAI, is any object with a <code>name</code> and a <code>run</code> method that takes a task and returns a <a href="glossary.html#trajectory">trajectory</a>. The lab does not need to know how the agent thinks. It needs the steps. Tool calls go through the suite's environment, so the same faults and the same prices apply to your agent and to the baselines.</p>
+
+<h2>Why this helps you</h2>
+<p>This is the page the rest of the tour is for. Point the lab at the agent you already have, and it will run the same tasks, the same number of trials, and the same broken tool calls as a baseline. A higher score then means your agent handled the failure. You can read the failure labels and see whether you should add a retry, stop a loop, or stop calling a tool you were never given.</p>
+
+<h2>Try this</h2>
+<p>Route every tool call through the recorder. A timeout comes back as a result with <code>ok</code> false and a <code>fault</code> name. You decide whether to retry. This agent looks up one order and retries that call once.</p>
+<pre><code>from relai import FaultPolicy, Variant, load_suite, make_baseline, run_experiment
+
+
+class MyAgent:
+    name = "mine"
+
+    def __init__(self, env):
+        self.env = env
+
+    def run(self, task):
+        rec = self.env.recorder(task)
+        rec.plan("look the order up")
+        result = rec.call("order_status", {"order": "O-88121"})
+        if not result.ok:
+            rec.recovery("retry once")
+            result = rec.call("order_status", {"order": "O-88121"})
+        if result.ok:
+            return rec.final(result.output)
+        return rec.final("unknown")
+
+
+suite = load_suite("reliability")
+env = suite.env(FaultPolicy(timeout_rate=0.3))
+experiment = run_experiment(
+    suite.tasks[:1],
+    [
+        Variant("mine", MyAgent(env)),
+        Variant("naive", make_baseline("naive", env)),
+    ],
+    trials=5,
+)
+for row in experiment.summary():
+    print(row["variant"], f"{row['success_rate']:.2f}")</code></pre>
+<p>From the terminal, point <code>--agent</code> at a factory that takes a ToolEnv. The repository includes one:</p>
+<pre><code>relai run reliability --agent examples.custom_agent:make_agent --agent retry:2 --timeout-rate 0.3</code></pre>
+<p><code>examples.custom_agent:make_agent</code> means the function <code>make_agent</code> in that module. It receives the suite's environment. The variant is named by the agent's <code>name</code> attribute.</p>
+
+<h2>What you should see</h2>
+<p>The script prints two lines for the order-status task, five trials, seed 0:</p>
+<pre><code>naive 0.80
+mine 0.80</code></pre>
+<p>The CLI command prints the usual table. One run of it in this repository, with a single trial per task, put <code>stubborn</code> and <code>retry:2</code> both at success 1.00. Stubborn is the name of the example agent. Both follow the suite's reference plan. Stubborn allows up to five attempts on a call. retry:2 allows the original call plus two retries.</p>
+
+<h2>How to read it</h2>
+<p>On this seed, both agents miss one of the five trials, and each miss is a recovery failure. Naive gives up when the first call times out. Yours tries once more, and that second call times out too. One retry is not a guarantee. It only covers a fault on the first call. The faults page is the same suite with three retries, where success reaches 1.00.</p>
+<p>Compare your row with the baseline in the same command, not against a number from another day. Same suite, same trials, same seed, same faults. Then read the failure modes line for your agent.</p>
+<ul>
+  <li>Mostly recovery: the agent is giving up, or retrying in a way the recorder cannot see.</li>
+  <li>Mostly tool misuse: it is calling a tool the task did not allow, or passing the wrong argument name.</li>
+  <li>Mostly context: it is repeating a call it already got an answer for.</li>
+  <li>Mostly horizon: retries, or a long plan, are blowing the step budget. The answer may still be right.</li>
+  <li>Mostly planning: it is answering without the tools the task needed.</li>
+  <li>Unclassified: the answer is wrong and none of those rules explain it. Look at the trajectory in the <a href="reports.html">HTML report</a> before you invent a cause.</li>
+</ul>
+<p>The <a href="agent-contract.html">agent contract</a> page is the small interface written out. <a href="live-models.html">Live models</a> is the same contract backed by an API. <a href="your-own-suite.html">Your own suite</a> is how you replace the customer-support tasks with the tasks your agent actually faces.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">Calling a tool yourself, and not through <code>rec.call</code>, hides the call. The lab cannot inject the fault, the price and the latency never get recorded, and the trajectory looks like the agent never tried. Recording a retry without <code>rec.recovery(...)</code> still retries the tool, but the report cannot tell a deliberate retry from an accidental second call. Write the recovery step.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="glossary.html">Glossary</a> <a href="your-own-suite.html">Your own suite</a></p>

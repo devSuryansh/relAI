@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stress and sweeps · relAI</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top"><a class="brand" href="index.html">relAI <span>Documentation</span></a><nav class="topnav" aria-label="Sections"><a href="index.html">Start here</a><a href="tasks-and-suites.html">Features</a><a href="agent-contract.html">Your agent</a><a href="glossary.html">Glossary</a></nav></header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation">
+<p class="group">Start here</p>
+<div class="item"><a href="index.html">What relAI does</a><span class="stepnum">1</span></div>
+<div class="item"><a href="install.html">Install and first run</a><span class="stepnum">2</span></div>
+<div class="item"><a href="how-a-run-works.html">How a run works</a><span class="stepnum">3</span></div>
+<p class="group">Features</p>
+<div class="item"><a href="tasks-and-suites.html">Tasks and suites</a></div>
+<div class="item"><a href="trajectories.html">Trajectories</a></div>
+<div class="item"><a href="seeded-faults.html">Seeded faults</a><span class="stepnum">4</span></div>
+<div class="item"><a href="failure-modes.html">Failure modes</a><span class="stepnum">5</span></div>
+<div class="item"><a href="scores.html">Scores</a><span class="stepnum">6</span></div>
+<div class="item"><a href="comparing-agents.html">Comparing agents</a></div>
+<div class="item"><a href="stress-and-sweeps.html" aria-current="page">Stress and sweeps</a></div>
+<div class="item"><a href="reports.html">Reports</a></div>
+<div class="item"><a href="self-check.html">Self-check</a></div>
+<p class="group">Your agent</p>
+<div class="item"><a href="agent-contract.html">The agent contract</a></div>
+<div class="item"><a href="plug-in-your-agent.html">Plug in your agent</a><span class="stepnum">7</span></div>
+<div class="item"><a href="live-models.html">Live models</a></div>
+<div class="item"><a href="your-own-suite.html">Your own suite</a></div>
+<p class="group">Glossary</p>
+<div class="item"><a href="glossary.html">Glossary</a><span class="stepnum">8</span></div>
+</nav>
+    <main id="content">
+      <p class="kicker">Features</p>
+      
+      <h1>Stress and sweeps</h1>
+      <h2>Definition</h2>
+<p class="def">A stress test measures how success falls as tool timeouts become more common. A sweep runs one agent at many settings, on the same tasks and the same faults, then keeps the settings that are not beaten on success, cost, and latency together. The recommendation is the cheapest of those that still meet a success target.</p>
+
+<h2>Why this helps you</h2>
+<p>A single timeout rate can make a retry budget look either essential or pointless. Stress shows the whole slope, so you can see where your agent breaks. A sweep answers the next question: if retries help, how many are worth paying for? The cheapest setting that still clears your bar is the one to ship, not the one with the perfect score at twice the cost.</p>
+
+<h2>Try this</h2>
+<pre><code>relai stress reliability --agent naive --agent retry:1 --agent retry:3 --trials 5
+relai sweep reliability --param max_retries=0,1,2,3,4 --timeout-rate 0.3 --trials 5</code></pre>
+<p>Stress uses the rates <code>0,0.1,0.2,0.3,0.4,0.5</code> unless you pass <code>--rates</code>. Sweep defaults to <code>max_retries=0,1,2,3</code> on the retry baseline, and to a success target of 0.90. <code>--min-success 0.95</code> raises that bar. <code>--agent guessing</code> would sweep a different baseline, but guessing has no numeric knob, so the useful agent here is retry.</p>
+
+<h2>What you should see</h2>
+<pre><code>success rate as tool timeouts increase
+agent \ timeout rate  0     0.1   0.2   0.3   0.4   0.5
+--------------------  ----  ----  ----  ----  ----  ----
+naive                 1.00  0.87  0.70  0.58  0.45  0.38
+retry:1               1.00  1.00  0.92  0.77  0.68  0.53
+retry:3               1.00  1.00  1.00  1.00  0.92  0.82</code></pre>
+<pre><code>variant        success  95% CI        pass^k  consistent  cost     latency  recovery  horizon
+-------------  -------  ------------  ------  ----------  -------  -------  --------  -------
+max_retries=3  1.00     [1.00, 1.00]  1.00    1.00        $0.0030  1116ms   1.00      8.8
+max_retries=4  1.00     [1.00, 1.00]  1.00    1.00        $0.0030  1116ms   1.00      8.8
+max_retries=2  0.98     [0.95, 1.00]  0.92    0.92        $0.0030  1116ms   0.98      8.7
+max_retries=1  0.77     [0.67, 0.88]  0.33    0.33        $0.0025  947ms    0.79      7.2
+max_retries=0  0.58     [0.38, 0.77]  0.25    0.33        $0.0016  543ms    0.58      5.0
+
+Pareto front (success, cost, latency): max_retries=3, max_retries=4, max_retries=2, max_retries=1, max_retries=0
+Recommended: max_retries=2 (success 0.98, $0.0030 and 1116 ms per run), the cheapest setting with success &gt;= 0.90.</code></pre>
+
+<h2>How to read it</h2>
+<p>At a timeout rate of 0, every agent passes. The naive agent is the first to slip, because it has no second chance. Three retries hold a perfect success rate through a timeout rate of 0.3 and are still at 0.82 when half of calls time out. That is the slope. It is not a reason to always pick three retries.</p>
+<p>The sweep is that choice at one rate, 0.3. Four retries and three retries both score 1.00 at the same cost and latency in this suite: the fourth retry is never needed, so it adds no calls. Two retries score 0.98, still above 0.90, at the same recorded cost as three. The recommendation picks two because it is the cheapest setting that clears 0.90. When costs tie, the faster setting wins, and the name breaks any remaining tie.</p>
+<p>The Pareto line lists settings that are not worse on all three of success, cost, and latency. Here every setting is on the front: each step up in retries buys success and spends cost or time, so nothing is strictly dominated. A setting that cost more and scored worse would be left off the list. In the HTML report those rows are marked.</p>
+<p>The paired sentence under a sweep compares the top two ranked rows. Three retries and four retries disagree on nobody, so the p-value is 1. That is agreement, not a failure of the test.</p>
+
+<h2>Easy to mix up</h2>
+<p class="mix">The recommendation is not the highest success. It is the cheapest setting that meets the target. If nothing meets <code>--min-success</code>, there is no recommendation. Also, <code>max_retries=2</code> means two retries after the first call, three calls in total. <code>retry:2</code> on the command line is the same knob.</p>
+
+<h2>Next</h2>
+<p class="nextlinks"><a href="reports.html">Reports</a> <a href="comparing-agents.html">Comparing agents</a></p>
+      <footer>
+  <p>These pages open in a browser directly from the <code>website/</code> folder.
+  After editing a fragment in <code>website/pages/</code>, regenerate them
+  with <code>python website/build.py</code>.</p>
+</footer>
+    </main>
+  </div>
+</body>
+</html>
