@@ -16,9 +16,6 @@ htmlcov/
 .idea/
 .vscode/
 
-# Institute templates, forms, and class lists stay on each member's machine
-docs/
-
 # Experiment outputs
 *.db
 /report.html
